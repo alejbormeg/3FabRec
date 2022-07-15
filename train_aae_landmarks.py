@@ -13,7 +13,7 @@ import torch.nn.functional as F
 
 import config as cfg
 import csl_common.utils.ds_utils as ds_utils
-from datasets import wflw, w300, aflw
+from datasets import wflw, w300, aflw, forense_am
 from csl_common.utils import log
 from csl_common.utils.nn import to_numpy, Batch
 from train_aae_unsupervised import AAETraining
@@ -34,12 +34,12 @@ class AAELandmarkTraining(AAETraining):
         self.all_landmarks = ds.ALL_LANDMARKS
         self.landmarks_no_outline = ds.LANDMARKS_NO_OUTLINE
         self.landmarks_only_outline = ds.LANDMARKS_ONLY_OUTLINE
-
+        self.first_time=True
         super().__init__(datasets, args, session_name, macro_batch_size=0, **kwargs)
 
         self.optimizer_lm_head = optim.Adam(self.saae.LMH.parameters(), lr=args.lr_heatmaps, betas=(0.9,0.999))
         self.optimizer_E = optim.Adam(self.saae.Q.parameters(), lr=0.00002, betas=(0.9, 0.999))
-        # self.optimizer_G = optim.Adam(self.saae.P.parameters(), lr=0.00002, betas=(0.9, 0.999))
+        # self.optimizer_G = optim.Adam(self.saae.P.parameters(), lr=0.00002, betas=(0.9, 0.999)) #No se define para G por el FineTuning
 
     def _get_network(self, pretrained):
         return fabrec.Fabrec(self.num_landmarks, input_size=self.args.input_size, z_dim=self.args.embedding_dims)
@@ -117,10 +117,16 @@ class AAELandmarkTraining(AAETraining):
 
     def _print_epoch_summary(self, epoch_stats, epoch_starttime, eval=False):
         means = pd.DataFrame(epoch_stats).mean().to_dict()
-
+        """
         try:
             nmes = np.concatenate([s['nmes'] for s in self.epoch_stats if 'nmes' in s])
         except KeyError:
+            nmes = np.zeros((1,100))
+        """
+
+        if eval:
+            nmes = np.concatenate([s['nmes'] for s in self.epoch_stats if 'nmes' in s])
+        else:
             nmes = np.zeros((1,100))
 
         duration = int(time.time() - epoch_starttime)
@@ -183,7 +189,6 @@ class AAELandmarkTraining(AAETraining):
         log.info("")
         log.info("Starting training session '{}'...".format(self.session_name))
         # log.info("")
-
         while num_epochs is None or self.epoch < num_epochs:
             log.info('')
             log.info('Epoch {}/{}'.format(self.epoch + 1, num_epochs))
@@ -229,14 +234,14 @@ class AAELandmarkTraining(AAETraining):
         iter_stats = {'time_dataloading': time_dataloading}
 
         batch = Batch(data, eval=eval)
-
+        #Gradientes a 0
         self.saae.zero_grad()
-        self.saae.eval()
+        self.saae.eval() #Pone la red en Modo evaluación
 
-        input_images = batch.target_images if batch.target_images is not None else batch.images
+        input_images = batch.target_images if batch.target_images is not None else batch.images #carga las imágenes
 
-        with torch.set_grad_enabled(self.args.train_encoder):
-            z_sample = self.saae.Q(input_images)
+        with torch.set_grad_enabled(self.args.train_encoder): #Si estamos entrenando el encoder calcula gradientes
+            z_sample = self.saae.Q(input_images) #Calcula el embedding
 
         iter_stats.update({'z_recon_mean': z_sample.mean().item()})
 
@@ -253,20 +258,20 @@ class AAELandmarkTraining(AAETraining):
         #######################
         # Landmark predictions
         #######################
-        train_lmhead = not eval
+        train_lmhead = not eval #Entrenamos cuando no estamos en modo eval
         lm_preds_max = None
         with torch.set_grad_enabled(train_lmhead):
-            self.saae.LMH.train(train_lmhead)
-            X_lm_hm = self.saae.LMH(self.saae.P)
+            self.saae.LMH.train(train_lmhead) #Si train_lmhead=True ponemos modo entrenamiento
+            X_lm_hm = self.saae.LMH(self.saae.P)#Obtiene los mapas de calor
             if batch.lm_heatmaps is not None:
-                loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3
+                loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
                 iter_stats.update({'loss_lms': loss_lms.item()})
 
             if eval or self._is_printout_iter(eval):
                 # expensive, so only calculate when every N iterations
                 # X_lm_hm = lmutils.decode_heatmap_blob(X_lm_hm)
-                X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm)
-                lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm)
+                X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm) #TODO-Mirar esto
+                lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm) #TODO-Mirar esto
 
 
             if eval or self._is_printout_iter(eval):
@@ -279,10 +284,10 @@ class AAELandmarkTraining(AAETraining):
         if train_lmhead:
             # if self.args.train_encoder:
             #     loss_lms = loss_lms * 80.0
-            loss_lms.backward()
-            self.optimizer_lm_head.step()
+            loss_lms.backward() #Calcula gradientes
+            self.optimizer_lm_head.step() #Hace Backprop por la red
             if self.args.train_encoder:
-                self.optimizer_E.step()
+                self.optimizer_E.step() #para el fine tuning
                 # self.optimizer_G.step()
 
         # statistics
@@ -309,7 +314,8 @@ class AAELandmarkTraining(AAETraining):
                                   landmarks_only_outline=self.landmarks_only_outline,
                                   landmarks_no_outline=self.landmarks_no_outline,
                                   f=1.0,
-                                  wait=self.wait)
+                                  wait=self.wait,
+                                  draw_gt_offsets=False)
 
 
 def run():
@@ -326,7 +332,8 @@ def run():
                                            (args.train_count, args.val_count)):
         train = phase == TRAIN
         name = dsnames[0]
-        transform = ds_utils.build_transform(deterministic=not train, daug=args.daug)
+        #transform = ds_utils.build_transform(deterministic=not train, daug=args.daug)
+        transform = None
         root, cache_root = cfg.get_dataset_paths(name)
         dataset_cls = cfg.get_dataset_class(name)
         datasets[phase] = dataset_cls(root=root,
@@ -375,7 +382,7 @@ if __name__ == '__main__':
 
     # Dataset
     parser.add_argument('--dataset', default=['w300'], type=str, help='dataset for training and testing',
-                        choices=['w300', 'aflw', 'wflw'], nargs='+')
+                        choices=['w300', 'aflw', 'wflw','forense_am'], nargs='+')
     parser.add_argument('--test-split', default='full', type=str, help='test set split for 300W/AFLW/WFLW',
                         choices=['challenging', 'common', '300w', 'full', 'frontal']+wflw.SUBSETS)
 

@@ -72,13 +72,13 @@ def create_interpolated_vectors(v1, v2, nsteps, mode='real2real'):
         z_new[i] = st + (nd - st)/(nsteps-1) * i
     return z_new
 
-
+#Define el error de reconstrucción Lrec
 def loss_recon(X, X_recon, reduction='mean'):
     diff = torch.abs(X - X_recon) * 255
     l1_dist_per_img = diff.reshape(len(X), -1).mean(dim=1)
     return __reduce(l1_dist_per_img, reduction)
 
-
+#Error estructural Lcs
 def loss_struct(X, X_recon, torch_ssim, calc_error_maps=False, reduction='mean'):
     cs_error_maps = []
     nimgs = len(X)
@@ -93,7 +93,7 @@ def loss_struct(X, X_recon, torch_ssim, calc_error_maps=False, reduction='mean')
     else:
         return loss, None
 
-
+#Calcula el SSIM
 def calc_ssim(X, X_recon):
     ssim = np.zeros(len(X))
     input_images = vis.to_disp_images(X, denorm=True)
@@ -114,7 +114,7 @@ def weights_init(m):
     if isinstance(m, torch.nn.Conv2d):
         torch.nn.init.xavier_uniform(m.weight)
 
-
+#Clase importante
 class AAETraining(object):
 
     def __init__(self, datasets, args, session_name='debug', snapshot_dir=cfg.SNAPSHOT_DIR,
@@ -165,6 +165,7 @@ class AAETraining(object):
         # Set optimizators
         betas = (self.args.beta1, self.args.beta2)
         Q_params = list(filter(lambda p: p.requires_grad, self.saae.Q.parameters()))
+        #Usa Adams en todos los módulos
         self.optimizer_E = optim.Adam(Q_params, lr=args.lr, betas=betas)
         self.optimizer_G = optim.Adam(self.saae.P.parameters(), lr=args.lr, betas=betas)
         self.optimizer_D_z = optim.Adam(self.saae.D_z.parameters(), lr=args.lr, betas=betas)
@@ -266,29 +267,41 @@ class AAETraining(object):
 
     def total_training_time(self):
         return self.total_training_time_previous + self._training_time()
-
+    #SE USA EN RUN_BATCH DE train_aae_unsupervised.py
     def update_encoding(self, z_sample):
         stats = {}
         # Discriminator
+        # EL DISCRIMINADOR D_Z SE ACTUALIZA CADA 4 ITERACIONES DENTRO DE UNA ÉPOCA
         if self.iter_in_epoch % 4 == 0:
+            #Devuelve un Vector de la misma longitud cuyas componentes siguen una Normal(0,1)
             z_real = self.enc_rand_like(z_sample).to(device)
             D_real = self.saae.D_z(z_real)
+            #Obtenemos el embedding pero con detach, para que lo sucesivo no afecte al árbol
             D_fake = self.saae.D_z(z_sample.detach())
+            #Suman un epsilon muy pequeño para asegurarse de que el logaritmo no se evalúa en 0
+            #ESTE SERIA L_enc
             loss_D_z = -torch.mean(torch.log(D_real + eps) + torch.log(1 - D_fake + eps))
+            #Se calculan gradientes hasta justo el estado antes del detatch
             loss_D_z.backward()
+            #Se hace backpropagation a través del discriminante
             self.optimizer_D_z.step()
             stats['loss_D_z'] = loss_D_z.item()
 
         # Encoder gaussian loss
+        #Cada dos iteraciones
         if self.iter_in_epoch % 2 == 0:
+            #Calculamos el valor del discriminante a partir de z_sample SIN DETACH
             D_fake = self.saae.D_z(z_sample)
+            #Calculamos función de coste del Discriminante
             loss_E = -torch.mean(torch.log(D_fake + eps))
+            #PARA NO ELIMINAR EL GRAFO DE MEMORIA
             loss_E.backward(retain_graph=True)
             stats['loss_E'] = loss_E.item()
         return stats
 
     def update_gan(self, X_target, X_recon, z_sample, train=True, with_gen_loss=False, w_gen=0.25, X_gen=None):
         stats = {}
+        #Este error es del paper en que se basan para el entrenamiento del AAE, pero no se usa en 3FabRec
         if with_gen_loss:
             # Generate images by interpolating between reals
             # z_noise = self.enc_rand(len(z_sample), z_sample.shape[1]).to(device)
@@ -306,12 +319,18 @@ class AAETraining(object):
             X_gen = self.saae.P(z_random)[:, :3]
 
         # update discriminator
+        #LA FRECUENCIA DE ACTUALIZACIÓN ES UN PARÁMETRO QUE SE PUEDE CAMBIAR
         if  self.iter_in_epoch % self.args.update_D_freq == 0:
+            #Gradientes del discriminante a 0
             self.saae.D.zero_grad()
+            #Se obtiene el erro real
             err_real = self.saae.D(X_target)
+            #se obtiene el de las imágenes reconstruidas con DETACH
             err_fake = self.saae.D(X_recon.detach())
+            #Se mezcla
             err_fake = err_fake[sklearn.utils.shuffle(range(len(err_fake)))]
             assert(len(err_real) == len(X_target))
+            #Error L_adv
             loss_D = -torch.mean(torch.log(err_real + eps) + torch.log(1.0 - err_fake + eps))
             if with_gen_loss:
                 err_fake_gen = self.saae.D(X_gen.detach())
@@ -319,14 +338,16 @@ class AAETraining(object):
                 loss_D = loss_D*(1-w_gen) + loss_D_gen*w_gen
                 stats.update({'loss_D_rec': loss_D.item(), 'loss_D_gen': loss_D_gen.item()})
             if train:
+                #Se hace Backward
                 loss_D.backward()
+                #Se hace backpropagation en D
                 self.optimizer_D.step()
             stats.update({'loss_D': loss_D.item(), 'err_real': err_real.mean().item()})
 
         # update E
         if self.iter_in_epoch % self.args.update_E_freq == 0:
             self.saae.D.zero_grad()
-            set_requires_grad(self.saae.D, False)
+            set_requires_grad(self.saae.D, False) #Indica que no se calculen gradientes en D
             err_G_random = self.saae.D(X_recon)
             loss_G_rec = -torch.mean(torch.log(err_G_random + eps))
             if with_gen_loss:
@@ -336,7 +357,7 @@ class AAETraining(object):
                 stats.update({'loss_G_rec': loss_G_rec.item(), 'loss_G_gen': loss_G_gen.item()})
             else:
                 loss_G = loss_G_rec
-            set_requires_grad(self.saae.D, True)
+            set_requires_grad(self.saae.D, True) #Ahora sí permite calcular gradientes en D
             stats.update({'loss_G': loss_G.item(), 'err_fake': loss_G.mean().item()})
             return stats, loss_G
 

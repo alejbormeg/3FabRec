@@ -21,14 +21,16 @@ eps = 1e-8
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 WITH_LOSS_ZREG = False
 
-
+#Entrenamiento del AAE
 class AAEUnsupervisedTraining(AAETraining):
     def __init__(self, datasets, args, session_name='debug', **kwargs):
         super().__init__(datasets, args, session_name, **kwargs)
 
+    #Funcion para obtener la red, se pasa por parámetro si se quiere preentrenada o no
     def _get_network(self, pretrained):
         return aae.AAE(self.args.input_size, pretrained_encoder=pretrained)
 
+    #Mostramos las estadísticas en cada iteración
     def _print_iter_stats(self, stats):
         means = pd.DataFrame(stats).mean().to_dict()
         current = stats[-1]
@@ -81,6 +83,7 @@ class AAEUnsupervisedTraining(AAETraining):
             epoch_time=str(datetime.timedelta(seconds=self._training_time()))
         ))
 
+    #Funcion para recoger las estadísticas de todas las iteraciones tras una época
     def _print_epoch_summary(self, epoch_stats, epoch_starttime):
         means = pd.DataFrame(epoch_stats).mean().to_dict()
         try:
@@ -135,7 +138,7 @@ class AAEUnsupervisedTraining(AAETraining):
         # except:
         #     print("no l1_recon_error")
 
-
+    #Evaluación tras una época
     def eval_epoch(self):
         log.info("")
         log.info("Starting evaluation of '{}'...".format(self.session_name))
@@ -153,7 +156,7 @@ class AAEUnsupervisedTraining(AAETraining):
         # print average loss and accuracy over epoch
         self._print_epoch_summary(self.epoch_stats, epoch_starttime)
 
-
+    #Función de entrenamiento, esta ligada al fichero aae_training.py
     def train(self, num_epochs):
 
         log.info("")
@@ -161,9 +164,11 @@ class AAEUnsupervisedTraining(AAETraining):
         log.info("")
 
         while num_epochs is None or self.epoch < num_epochs:
+            #Imprime la época actual
             log.info('')
             log.info('=' * 5 + ' Epoch {}/{}'.format(self.epoch+1, num_epochs))
 
+            #Inicializa las estadísticas
             self.epoch_stats = []
             epoch_starttime = time.time()
             self.saae.train(True)
@@ -225,7 +230,9 @@ class AAEUnsupervisedTraining(AAETraining):
         batch = Batch(data, eval=eval)
         X_target = batch.target_images if batch.target_images is not None else batch.images
 
+        #Con cada mini-Batch pone a cero los gradientes
         self.saae.zero_grad()
+        #El error se pone a 0 como requires_grad=True guarda el árbol de operaciones realizadas para obtener el error
         loss = torch.zeros(1, requires_grad=True).cuda()
 
         #######################
@@ -233,16 +240,19 @@ class AAEUnsupervisedTraining(AAETraining):
         #######################
         with torch.set_grad_enabled(self.args.train_encoder):
 
+            #Obtenemos el embedding de las imágenes de minibatch
             z_sample = self.saae.Q(batch.images)
 
             ###########################
             # Encoding regularization
             ###########################
+            #Por defecto with_zgan=True(Vector de pérdidas oculto), train_encoder=T
             if (not eval or self._is_printout_iter(eval)) and self.args.with_zgan and self.args.train_encoder:
-                if WITH_LOSS_ZREG:
+                if WITH_LOSS_ZREG: #TODO-AVERIGUAR CUANDO SE USA
                     loss_zreg = torch.abs(z_sample).mean()
                     loss += loss_zreg
                     iter_stats.update({'loss_zreg': loss_zreg.item()})
+
                 encoding = self.update_encoding(z_sample)
                 iter_stats.update(encoding)
 
@@ -253,18 +263,20 @@ class AAEUnsupervisedTraining(AAETraining):
         # Decoding
         #######################
 
+        #Si no queremos entrenar el encoder, se hace detach a partir de z_sample
         if not self.args.train_encoder:
             z_sample = z_sample.detach()
 
         with torch.set_grad_enabled(self.args.train_decoder):
 
-            # reconstruct images
+            #Imágenes reconstruidas
             X_recon = self.saae.P(z_sample)
 
             #######################
             # Reconstruction loss
             #######################
             loss_recon = aae_training.loss_recon(X_target, X_recon)
+            #Se acumula en loss el error Lrec con su peso correspondiente
             loss = loss_recon * self.args.w_rec 
             iter_stats['loss_recon'] = loss_recon.item()
 
@@ -272,11 +284,13 @@ class AAEUnsupervisedTraining(AAETraining):
             # Structural loss
             #######################
             cs_error_maps = None
+            #Comentar que with_ssim_loss por defecto es False, luego hay que indicarlo explícitamente para hacer lo que se dice en el paper
             if self.args.with_ssim_loss or eval:
                 store_cs_maps = self._is_printout_iter(eval) or eval  # get error maps for visualization
                 loss_ssim, cs_error_maps = aae_training.loss_struct(X_target, X_recon, self.ssim,
                                                                     calc_error_maps=store_cs_maps)
                 loss_ssim *= self.args.w_ssim
+                #TODO-Preguntar Aquí realmente está haciendo que la constante de rec sea 0.5 y la de cs 0.3 no?
                 loss = 0.5 * loss + 0.5 * loss_ssim
                 iter_stats['ssim_torch'] = loss_ssim.item()
 
@@ -298,9 +312,9 @@ class AAEUnsupervisedTraining(AAETraining):
             # Update auto-encoder
             if not eval:
                 if self.args.train_encoder:
-                    self.optimizer_E.step()
+                    self.optimizer_E.step() #Hacemos backpropagation
                 if self.args.train_decoder:
-                    self.optimizer_G.step()
+                    self.optimizer_G.step() #Hacemos backpropagation
 
             if eval or self._is_printout_iter(eval):
                 iter_stats['ssim'] = aae_training.calc_ssim(X_target, X_recon)
@@ -416,8 +430,8 @@ if __name__ == '__main__':
     parser.add_argument('--with-ssim-loss', type=bool_str, default=False, help='with structural loss')
     parser.add_argument('--with-zgan', type=bool_str, default=True, help='with hidden vector loss')
     parser.add_argument('--w-gen', default=0.25, type=float, help='weight of generative image loss')
-    parser.add_argument('--w-rec', default=1., type=float, help='weight of pixel loss')
-    parser.add_argument('--w-ssim', default=60., type=float, help='weight of structural image loss')
+    parser.add_argument('--w-rec', default=1., type=float, help='weight of pixel loss') #Pesos del Paper
+    parser.add_argument('--w-ssim', default=60., type=float, help='weight of structural image loss') #Pesos del Paper
     parser.add_argument('--update-D-freq', default=2, type=int, help='update the discriminator every N steps')
     parser.add_argument('--update-E-freq', default=1, type=int, help='update the encoder every N steps')
 
