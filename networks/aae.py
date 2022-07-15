@@ -13,7 +13,6 @@ from networks import resnet_ae, archs
 
 from csl_common.utils.nn import to_numpy, count_parameters, read_model, read_meta
 
-
 def calc_acc(outputs, labels):
     assert(outputs.shape[1] == 8)
     assert(len(outputs) == len(labels))
@@ -75,6 +74,7 @@ class AAE(nn.Module):
 
         decoder_class = networks.invresnet.InvResNet
         num_blocks = [cfg.DECODER_PLANES_PER_BLOCK] * 4
+        #TODO-No tengo muy claro cómo tocar esto para imágenes de 64x64
         self.P = decoder_class(networks.invresnet.InvBasicBlock,
                                num_blocks,
                                input_dims=self.z_dim,

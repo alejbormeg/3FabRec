@@ -310,7 +310,7 @@ def add_landmarks_to_images(images, landmarks, color=None, radius=2, gt_landmark
             # colors = ['tab:gray', 'tab:orange', 'tab:brown', 'tab:pink', 'tab:cyan', 'tab:olive', 'tab:red', 'tab:blue']
             # colors_rgb = list(map(plt_colors.to_rgb, colors))
 
-            colors = sns.color_palette("Set1", n_colors=14)
+            colors = sns.color_palette("Set1", n_colors=len(lm))
             for i in range(0,len(lm)):
                 cv2.circle(disp, tuple(lm[i].astype(int)), radius=radius, color=colors[i], thickness=2, lineType=cv2.LINE_AA)
     return new_images

@@ -400,6 +400,10 @@ class RandomHorizontalFlip(object):
         37: 37
     }
 
+    lm_left_to_right_30 = {
+        0: 29
+    }
+
     # DeepFashion full body fashion landmarks
     lm_left_to_right_8 = {
         0:1,
@@ -413,6 +417,7 @@ class RandomHorizontalFlip(object):
         def build_landmark_flip_map(left_to_right):
             map = left_to_right
             right_to_left = {v:k for k,v in map.items()}
+            print(right_to_left)
             map.update(right_to_left)
             return map
 
@@ -425,6 +430,7 @@ class RandomHorizontalFlip(object):
         self.lm_flip_map_5 = build_landmark_flip_map(self.lm_left_to_right_5)
         self.lm_flip_map_8 = build_landmark_flip_map(self.lm_left_to_right_8)
         self.lm_flip_map_38 = build_landmark_flip_map(self.lm_left_to_right_38)
+        self.lm_flip_map_30 = build_landmark_flip_map(self.lm_left_to_right_30)
 
 
     def __call__(self, sample):
@@ -452,6 +458,8 @@ class RandomHorizontalFlip(object):
                     lm_flip_map = self.lm_flip_map_8
                 elif len(landmarks) == 38:
                     lm_flip_map = self.lm_flip_map_38
+                elif len(landmarks) == 30:
+                    lm_flip_map = self.lm_flip_map_30
                 else:
                     raise ValueError('Invalid landmark format.')
                 for i in range(len(landmarks)):

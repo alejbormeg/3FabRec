@@ -58,7 +58,7 @@ class BasicBlock(nn.Module):
 
         return out
 
-
+#TODO- NO ENTIENDO BIEN QUE ES ESTO
 class LandmarkHead(nn.Module):
     def __init__(self, block, layers, num_classes=1000, input_size=256, input_channels=3, layer_normalization='batch'):
         super(LandmarkHead, self).__init__()
@@ -220,26 +220,45 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
+        #print("Tamaño tras conv1: ",x.shape)
         x = self.bn1(x)
         x = self.relu(x)
         # x = self.conv2(x)
         # x = self.bn1(x)
         # x = self.relu(x)
         x = self.maxpool(x)
+        #print("Tamaño tras maxpool: ",x.shape)
 
         if self.input_size > 128 and self.with_additional_layers:
             x = self.layer0(x)
+            #print("Tamaño tras layer0: ", x.shape)
+
             if self.input_size > 256:
                 x = self.layer01(x)
 
         self.x1 = self.layer1(x)
+        #print("Tamaño tras layer1: ",self.x1.shape)
+
         self.x2 = self.layer2(self.x1)
+        #print("Tamaño tras layer2: ",self.x2.shape)
+
         x = self.layer3(self.x2)
+        #print("Tamaño tras layer3: ",x.shape)
+
         x = self.layer4(x)
+        #print("Tamaño tras layer4: ",x.shape)
+
         self.ft = x
-        x = self.avgpool(x)
+
+        if self.input_size!=64:
+            x = self.avgpool(x)
+        #print("Tamaño tras AvgPooling: ",x.shape)
+
         x = x.view(x.size(0), -1)
+        #print("Tamaño tras view: ",x.shape)
+
         x = self.fc(x)
+        #print("Tamaño tras fc: ",x.shape)
 
         # x =  torch.nn.functional.normalize(x, dim=1)
         return x

@@ -8,6 +8,7 @@ import torch
 
 def deconv4x4(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
+    #Calcula el gradiente con respecto a la entrada, se puede ver como una Deconvolucion
     return nn.ConvTranspose2d(in_planes, out_planes, kernel_size=4, stride=stride, padding=1, bias=False)
 
 
@@ -122,7 +123,9 @@ class LandmarkHeadV2(LandmarkHead):
         #     x = self.t5(x)
         #     if self.output_size > 256:
         #         x = self.layer6(x)
-        return self.lin(x)
+        x=self.lin(x)
+        #print("Tamaño de los mapas de calor: ", x.shape)
+        return x
 
 
 class SemanticFeatureHead(LandmarkHead):
@@ -183,7 +186,7 @@ class InvResNet(nn.Module):
         if self.with_spectral_norm:
             self.sn = torch.nn.utils.spectral_norm
         else:
-            self.sn = lambda x: x
+            self.sn = lambda x: x #Lo deja igual
 
         self.lin_landmarks = None
         self.inplanes = 512
@@ -266,29 +269,49 @@ class InvResNet(nn.Module):
     def forward(self, x):
 
         x = self.fc(x)
+        #print("Tamaño tras FC: ",x.shape)
         x = x.view(x.size(0), -1, 1,1)
+        #print("Tamaño tras view: ",x.shape)
 
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
+        if self.output_size!=64:
+            x = self.conv1(x)
+            #print("Tamaño tras conv1: ",x.shape)
+
+            x = self.bn1(x)
+            x = self.relu(x)
+
         self.x0 = x
 
         x1 = self.layer1(x)
         self.x1 = x1
-        self.x2 = self.layer2(x1)
-        self.x3 = self.layer3(self.x2)
-        self.x4 = self.layer4(self.x3)
+        #print("Tamaño tras layer1: ",self.x1.shape)
 
-        if self.output_size == 128:
+        self.x2 = self.layer2(x1)
+        #print("Tamaño tras layer2: ",self.x2.shape)
+
+        self.x3 = self.layer3(self.x2)
+        #print("Tamaño tras layer3: ",self.x3.shape)
+
+        self.x4 = self.layer4(self.x3)
+        #print("Tamaño tras layer4: ",self.x4.shape)
+
+        if self.output_size==64:
+            x = self.layer5(self.x4)
+            #print("Tamaño tras layer5: ", x.shape)
+            self.x5 = x
+        elif self.output_size == 128:
             x = self.x4
         elif self.output_size == 256:
             x = self.layer5(self.x4)
+            #print("Tamaño tras layer5: ", x.shape)
             self.x5 = x
         elif self.output_size == 512:
             x = self.layer5(self.x4)
             x = self.layer6(x)
 
         x = self.lin(x)
+        #print("Tamaño tras lin: ",x.shape)
+
         x = self.tanh(x)
         return x
 

@@ -34,7 +34,7 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
                     lm_heatmaps=None, target_images=None, lm_preds_cnn=None, ds=None, wait=0, ssim_maps=None,
                     landmarks_to_draw=None, ocular_norm='outer', horizontal=False, f=1.0,
                     overlay_heatmaps_input=False, overlay_heatmaps_recon=False, clean=False,
-                    landmarks_only_outline=range(17), landmarks_no_outline=range(17,68)):
+                    landmarks_only_outline=range(17), landmarks_no_outline=range(17,68), draw_gt_offsets=True):
 
     gt_color = (0,255,0)
     pred_color = (0,0,255)
@@ -62,7 +62,10 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
     pred_heatmaps = None
     if X_lm_hm is not None:
         pred_heatmaps = to_single_channel_heatmap(to_numpy(X_lm_hm[:nimgs]))
+        print(pred_heatmaps.shape)
         pred_heatmaps = [cv2.resize(im, None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST) for im in pred_heatmaps]
+        print("Tras el reescalado")
+        print(pred_heatmaps[0].shape)
         gt_heatmaps = None
         if lm_heatmaps is not None:
             gt_heatmaps = to_single_channel_heatmap(to_numpy(lm_heatmaps[:nimgs]))
@@ -74,7 +77,7 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
     lm_preds_max = lm_preds_max[:nimgs] * f
     if lm_preds_cnn is not None:
         lm_preds_cnn = lm_preds_cnn[:nimgs] * f
-    lm_gt *= f
+    lm_gt = (lm_gt*f)
 
     input_images = vis.to_disp_images(images[:nimgs], denorm=True)
     if target_images is not None:
@@ -99,7 +102,7 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
     disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=gt_color)
     disp_images = vis.add_landmarks_to_images(disp_images, lm_preds_max[:nimgs], lm_errs=nme_per_lm,
                                               color=pred_color, draw_wireframe=False, gt_landmarks=lm_gt,
-                                              draw_gt_offsets=True)
+                                              draw_gt_offsets=draw_gt_offsets)
 
     # disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=(1,1,1), radius=1,
     #                                           draw_dots=True, draw_wireframe=True, landmarks_to_draw=landmarks_to_draw)
@@ -140,7 +143,7 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
 
     disp_X_recon = vis.add_landmarks_to_images(disp_X_recon, lm_preds_max[:nimgs],
                                                color=pred_color, draw_wireframe=True,
-                                               gt_landmarks=lm_gt, draw_gt_offsets=True, lm_errs=nme_per_lm,
+                                               gt_landmarks=lm_gt, draw_gt_offsets=draw_gt_offsets, lm_errs=nme_per_lm,
                                                draw_dots=True, radius=2)
 
     def add_confidences(disp_X_recon, lmids, loc):

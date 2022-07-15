@@ -44,7 +44,7 @@ class FaceDataset(ImageDataset):
         relative_landmarks = self._crop_landmarks(landmarks_to_return) \
             if landmarks_to_return is not None else self.empty_landmarks
 
-        # self.show_landmarks(image, landmarks)
+        #self.show_landmarks(image, relative_landmarks)
 
         sample = {'image': image,
                   'landmarks': relative_landmarks,
