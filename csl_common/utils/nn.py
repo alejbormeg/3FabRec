@@ -61,8 +61,8 @@ class Batch:
         except KeyError:
             self.ids = None
 
-        print("Mostramos los índices")
-        print(self.ids)
+        #print("Mostramos los índices")
+        #print(self.ids)
 
         try:
             self.target_images = data['target']

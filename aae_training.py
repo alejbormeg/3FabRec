@@ -199,7 +199,7 @@ class AAETraining(object):
         log.info("AffectNet weights: {}".format(_weights))
         return torch.nn.CrossEntropyLoss(weight=torch.from_numpy(_weights).to(device))
 
-    def _save_snapshot(self, is_best=False):
+    def _save_snapshot(self, is_best=False,partition=''):
         def write_model(out_dir, model_name, model):
             filepath_mdl = os.path.join(out_dir, model_name+'.mdl')
             snapshot = {
@@ -220,7 +220,8 @@ class AAETraining(object):
                         'best_score': self.best_score}
                 json.dump(data, outfile)
 
-        model_data_dir = os.path.join(self.snapshot_dir, self.session_name)
+        print(self.session_name+partition)
+        model_data_dir = os.path.join(self.snapshot_dir, self.session_name+partition)
         model_snap_dir =  os.path.join(model_data_dir, '{:05d}'.format(self.epoch+1))
         write_model(model_snap_dir, 'saae', self.saae)
         # write_model(model_snap_dir, 'encoder', self.saae.Q.model)

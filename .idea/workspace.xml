@@ -3,10 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aae_training.py" beforeDir="false" afterPath="$PROJECT_DIR$/aae_training.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/csl_common/utils/nn.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/utils/nn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/datasets/facedataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/datasets/facedataset.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/datasets/forense_am.py" beforeDir="false" afterPath="$PROJECT_DIR$/datasets/forense_am.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/landmarks/lmvis.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmvis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_aae_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_aae_landmarks.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -64,7 +64,9 @@
       <workItem from="1657899422285" duration="309000" />
       <workItem from="1657899750324" duration="452000" />
       <workItem from="1657900270016" duration="4331000" />
-      <workItem from="1657958713361" duration="10639000" />
+      <workItem from="1657958713361" duration="10712000" />
+      <workItem from="1657983885384" duration="7092000" />
+      <workItem from="1657992072664" duration="3646000" />
     </task>
     <servers />
   </component>

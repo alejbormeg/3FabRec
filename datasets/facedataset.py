@@ -28,7 +28,7 @@ class FaceDataset(ImageDataset):
     def _crop_landmarks(self, lms):
          return self.loader._cropper.apply_to_landmarks(lms)[0]
 
-    def get_sample(self, filename, bb=None, landmarks_for_crop=None, id=None, landmarks_to_return=None):
+    def get_sample(self, filename, bb=None, landmarks_for_crop=None, id=None, landmarks_to_return=None, mask=None):
         try:
             crop_mode = 'landmarks' if landmarks_for_crop is not None else 'bounding_box'
             crop_params = {'landmarks': landmarks_for_crop,
@@ -67,7 +67,7 @@ class FaceDataset(ImageDataset):
             # 'expression':self._get_expression(sample),
             'id': id
         })
-
+        print(mask)
         if target is not None:
             sample['target'] = target
 

@@ -184,7 +184,7 @@ class AAELandmarkTraining(AAETraining):
         self._print_epoch_summary(self.epoch_stats, epoch_starttime)
         return self.epoch_stats
 
-    def train(self, num_epochs=None):
+    def train(self, num_epochs=None,partition=''):
 
         log.info("")
         log.info("Starting training session '{}'...".format(self.session_name))
@@ -202,14 +202,17 @@ class AAELandmarkTraining(AAETraining):
             # save model every few epochs
             if (self.epoch + 1) % self.snapshot_interval == 0:
                 log.info("*** saving snapshot *** ")
-                self._save_snapshot(is_best=False)
+                self._save_snapshot(is_best=False,partition=partition)
 
             # print average loss and accuracy over epoch
             self._print_epoch_summary(self.epoch_stats, epoch_starttime)
 
+            """
             if self._is_eval_epoch():
                 self.eval_epoch()
-
+            """
+            if self.epoch+1 == num_epochs:
+                self.eval_epoch()
             self.epoch += 1
 
         time_elapsed = time.time() - self.time_start_training
@@ -264,14 +267,16 @@ class AAELandmarkTraining(AAETraining):
             self.saae.LMH.train(train_lmhead) #Si train_lmhead=True ponemos modo entrenamiento
             X_lm_hm = self.saae.LMH(self.saae.P)#Obtiene los mapas de calor
             if batch.lm_heatmaps is not None:
+                #print("LANDMARKS ANTES DE CALCULAR EL ERROR")
+                #print(batch.mask[0])
                 loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
                 iter_stats.update({'loss_lms': loss_lms.item()})
 
             if eval or self._is_printout_iter(eval):
                 # expensive, so only calculate when every N iterations
                 # X_lm_hm = lmutils.decode_heatmap_blob(X_lm_hm)
-                X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm) #TODO-Mirar esto
-                lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm) #TODO-Mirar esto
+                X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm)
+                lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm)
 
 
             if eval or self._is_printout_iter(eval):
@@ -325,7 +330,7 @@ def run():
     if args.seed is not None:
         init_random(args.seed)
     # log.info(json.dumps(vars(args), indent=4))
-
+    print(args.val_count)
     datasets = {}
     #Cross validation 5-fold
     for i in range(5):
@@ -338,21 +343,40 @@ def run():
             transform = None
             root, cache_root = cfg.get_dataset_paths(name)
             dataset_cls = cfg.get_dataset_class(name)
-            datasets[phase] = dataset_cls(root=root,
-                                          cache_root=cache_root,
-                                          train=train,
-                                          max_samples=num_samples,
-                                          use_cache=args.use_cache,
-                                          start=args.st,
-                                          test_split=args.test_split,
-                                          align_face_orientation=args.align,
-                                          crop_source=args.crop_source,
-                                          return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
-                                          with_occlusions=args.occ and train,
-                                          landmark_sigma=args.sigma,
-                                          transform=transform,
-                                          image_size=args.input_size,
-                                          cros_val_split=i+1)
+            if phase == TRAIN:
+                datasets[phase] = dataset_cls(root=root,
+                                              cache_root=cache_root,
+                                              train=train,
+                                              max_samples=num_samples,
+                                              use_cache=args.use_cache,
+                                              start=args.st,
+                                              test_split=None,
+                                              align_face_orientation=args.align,
+                                              crop_source=args.crop_source,
+                                              return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
+                                              with_occlusions=args.occ and train,
+                                              landmark_sigma=args.sigma,
+                                              transform=transform,
+                                              image_size=args.input_size,
+                                              cross_val_split=i+1,
+                                              )
+            else:
+                datasets[phase] = dataset_cls(root=root,
+                                              cache_root=cache_root,
+                                              train=train,
+                                              max_samples=num_samples,
+                                              use_cache=args.use_cache,
+                                              start=args.st,
+                                              test_split='test',
+                                              align_face_orientation=args.align,
+                                              crop_source=args.crop_source,
+                                              return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
+                                              with_occlusions=args.occ and train,
+                                              landmark_sigma=args.sigma,
+                                              transform=transform,
+                                              image_size=args.input_size,
+                                              cross_val_split=i + 1,
+                                              )
 
         fntr = AAELandmarkTraining(datasets, args, session_name=args.sessionname, snapshot_interval=args.save_freq,
                                    workers=args.workers, wait=args.wait)
@@ -361,7 +385,7 @@ def run():
         if args.eval:
             fntr.eval_epoch()
         else:
-            fntr.train(num_epochs=args.epochs)
+            fntr.train(num_epochs=args.epochs, partition='/partition_'+str(i+1))
 
 
 if __name__ == '__main__':
@@ -396,11 +420,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    #TODO MUY IMPORTANTE, AQUÍ ES DONDE DEBO ASEGURARME DE HACER EL 5-fold
     args.dataset_train = args.dataset
     args.dataset_val = args.dataset
-    print("PRIMERO")
-    print(args.dataset_train)
+
     if args.sessionname is None:
         if args.resume:
             modelname = os.path.split(args.resume)[0]
