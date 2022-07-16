@@ -26,9 +26,8 @@ class FORENSE_AM(facedataset.FaceDataset):
     LANDMARKS_NO_OUTLINE = ALL_LANDMARKS  # no outlines in AFLW
     LANDMARKS_ONLY_OUTLINE = ALL_LANDMARKS  # no outlines in AFLW
 
-    def __init__(self, root, cache_root=None, test_split='full', landmark_ids=range(30), **kwargs):
-
-        assert test_split in ['full', 'frontal']
+    def __init__(self, root, cache_root=None, test_split=None, landmark_ids=range(30), cross_val_split=None, **kwargs):
+        self.cross_val_split = cross_val_split
         super().__init__(root=root,
                          cache_root=cache_root,
                          test_split=test_split,
@@ -49,15 +48,83 @@ class FORENSE_AM(facedataset.FaceDataset):
         return self.annotations.face_w.values
 
     def _load_annotations(self,split):
-        return self.make_split(self.train)
+        print("HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO")
+        return self.make_split(self.cross_val_split,split)
 
-    def make_split(self, train):
+    def make_split(self, cros_val_split,split):
         df = pd.read_csv(os.path.join(self.root, 'annotations.csv'),index_col=0)
-        #Vamos a hacer 80% entrenamiento 20% test
-        ids=list(range(164))
-        random.shuffle(ids)
-        train_ids=ids[0:int(len(ids)*0.8)]
-        annotations=df[df.ra.isin(train_ids)]
+        ids = list(range(164))
+        #Si no se indica partición de cross-Validation 5-fold se hace partición clásica 80% entrenamiento 20% test
+        if(cros_val_split==None):
+            random.shuffle(ids)
+            if(split==None):
+                train_ids=ids[0:int(len(ids)*0.8)]
+                annotations=df[df.ra.isin(train_ids)]
+            elif (split== 'test'):
+                test_ids=ids[0:int(len(ids)*0.8)]
+
+        #primer 20% de los datos para test y 80% restante para train
+        if(cros_val_split==1):
+            train_ids=ids[int(len(ids)*0.2) : ]
+            print("*************************************************************************************************************************")
+            print("Estamos en el primer caso de cros_val")
+            print(train_ids)
+            print("*************************************************************************************************************************")
+            annotations=df[df.ra.isin(train_ids)]
+
+        # segundo 20% de los datos para test y 80% restante para train
+        if (cros_val_split ==2):
+            list1=ids[0:int(len(ids)*0.2)]
+            list2=ids[int(len(ids)*0.4):]
+            train_ids=list1+list2
+            print(
+                "*************************************************************************************************************************")
+            print("Estamos en el segundo caso de cros_val")
+            print(train_ids)
+            print(
+                "*************************************************************************************************************************")
+
+            annotations=df[df.ra.isin(train_ids)]
+
+        # tercer 20% de los datos para test y 80% restante para train
+        if (cros_val_split ==3):
+            list1 = ids[0:int(len(ids) * 0.4)]
+            list2 = ids[int(len(ids) * 0.6):]
+            train_ids = list1 + list2
+            print(
+                "*************************************************************************************************************************")
+            print("Estamos en el tercer caso de cros_val")
+            print(train_ids)
+            print(
+                "*************************************************************************************************************************")
+
+            annotations=df[df.ra.isin(train_ids)]
+
+        # cuarto 20% de los datos para test y 80% restante para train
+        if (cros_val_split ==4):
+            list1 = ids[0:int(len(ids) * 0.6)]
+            list2 = ids[int(len(ids) * 0.8):]
+            train_ids = list1 + list2
+            print(
+                "*************************************************************************************************************************")
+            print("Estamos en el cuarto caso de cros_val")
+            print(train_ids)
+            print(
+                "*************************************************************************************************************************")
+
+            annotations = df[df.ra.isin(train_ids)]
+
+        # quinto 20% de los datos para test y 80% restante para train
+        if (cros_val_split ==5):
+            train_ids = ids[0:int(len(ids) * 0.8)]
+            annotations = df[df.ra.isin(train_ids)]
+            print(
+                "*************************************************************************************************************************")
+            print("Estamos en el quinto caso de cros_val")
+            print(train_ids)
+            print(
+                "*************************************************************************************************************************")
+
         return annotations
 
     def __len__(self):

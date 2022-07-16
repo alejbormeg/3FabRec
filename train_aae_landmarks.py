@@ -220,8 +220,9 @@ class AAELandmarkTraining(AAETraining):
         self.iters_per_epoch = int(len(dataset) / batchsize)
         self.iter_starttime = time.time()
         self.iter_in_epoch = 0
-        dataloader = td.DataLoader(dataset, batch_size=batchsize, shuffle=not eval,
-                                   num_workers=self.workers, drop_last=not eval)
+        #TODO CAMBIAR EL Shuffle y drop_last a not eval
+        dataloader = td.DataLoader(dataset, batch_size=batchsize, shuffle=False,
+                                   num_workers=self.workers, drop_last=False)
         for data in dataloader:
             self._run_batch(data, eval=eval)
             self.total_iter += 1
@@ -232,7 +233,6 @@ class AAELandmarkTraining(AAETraining):
         time_dataloading = time.time() - self.iter_starttime
         time_proc_start = time.time()
         iter_stats = {'time_dataloading': time_dataloading}
-
         batch = Batch(data, eval=eval)
         #Gradientes a 0
         self.saae.zero_grad()
@@ -327,39 +327,41 @@ def run():
     # log.info(json.dumps(vars(args), indent=4))
 
     datasets = {}
-    for phase, dsnames, num_samples in zip((TRAIN, VAL),
-                                           (args.dataset_train, args.dataset_val),
-                                           (args.train_count, args.val_count)):
-        train = phase == TRAIN
-        name = dsnames[0]
-        #transform = ds_utils.build_transform(deterministic=not train, daug=args.daug)
-        transform = None
-        root, cache_root = cfg.get_dataset_paths(name)
-        dataset_cls = cfg.get_dataset_class(name)
-        datasets[phase] = dataset_cls(root=root,
-                                      cache_root=cache_root,
-                                      train=train,
-                                      max_samples=num_samples,
-                                      use_cache=args.use_cache,
-                                      start=args.st,
-                                      test_split=args.test_split,
-                                      align_face_orientation=args.align,
-                                      crop_source=args.crop_source,
-                                      return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
-                                      with_occlusions=args.occ and train,
-                                      landmark_sigma=args.sigma,
-                                      transform=transform,
-                                      image_size=args.input_size)
-        print(datasets[phase])
+    #Cross validation 5-fold
+    for i in range(5):
+        for phase, dsnames, num_samples in zip((TRAIN, VAL),
+                                               (args.dataset_train, args.dataset_val),
+                                               (args.train_count, args.val_count)):
+            train = phase == TRAIN
+            name = dsnames[0]
+            #transform = ds_utils.build_transform(deterministic=not train, daug=args.daug)
+            transform = None
+            root, cache_root = cfg.get_dataset_paths(name)
+            dataset_cls = cfg.get_dataset_class(name)
+            datasets[phase] = dataset_cls(root=root,
+                                          cache_root=cache_root,
+                                          train=train,
+                                          max_samples=num_samples,
+                                          use_cache=args.use_cache,
+                                          start=args.st,
+                                          test_split=args.test_split,
+                                          align_face_orientation=args.align,
+                                          crop_source=args.crop_source,
+                                          return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
+                                          with_occlusions=args.occ and train,
+                                          landmark_sigma=args.sigma,
+                                          transform=transform,
+                                          image_size=args.input_size,
+                                          cros_val_split=i+1)
 
-    fntr = AAELandmarkTraining(datasets, args, session_name=args.sessionname, snapshot_interval=args.save_freq,
-                               workers=args.workers, wait=args.wait)
+        fntr = AAELandmarkTraining(datasets, args, session_name=args.sessionname, snapshot_interval=args.save_freq,
+                                   workers=args.workers, wait=args.wait)
 
-    torch.backends.cudnn.benchmark = True
-    if args.eval:
-        fntr.eval_epoch()
-    else:
-        fntr.train(num_epochs=args.epochs)
+        torch.backends.cudnn.benchmark = True
+        if args.eval:
+            fntr.eval_epoch()
+        else:
+            fntr.train(num_epochs=args.epochs)
 
 
 if __name__ == '__main__':
@@ -394,9 +396,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    #TODO MUY IMPORTANTE, AQUÍ ES DONDE DEBO ASEGURARME DE HACER EL 5-fold
     args.dataset_train = args.dataset
     args.dataset_val = args.dataset
-
+    print("PRIMERO")
+    print(args.dataset_train)
     if args.sessionname is None:
         if args.resume:
             modelname = os.path.split(args.resume)[0]

@@ -64,8 +64,6 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
         pred_heatmaps = to_single_channel_heatmap(to_numpy(X_lm_hm[:nimgs]))
         print(pred_heatmaps.shape)
         pred_heatmaps = [cv2.resize(im, None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST) for im in pred_heatmaps]
-        print("Tras el reescalado")
-        print(pred_heatmaps[0].shape)
         gt_heatmaps = None
         if lm_heatmaps is not None:
             gt_heatmaps = to_single_channel_heatmap(to_numpy(lm_heatmaps[:nimgs]))

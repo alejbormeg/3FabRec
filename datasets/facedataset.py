@@ -45,8 +45,8 @@ class FaceDataset(ImageDataset):
             if landmarks_to_return is not None else self.empty_landmarks
 
         #self.show_landmarks(image, relative_landmarks)
-
-        sample = {'image': image,
+        sample = {
+                  'image': image,
                   'landmarks': relative_landmarks,
                   'pose': np.zeros(3, dtype=np.float32)}
 
@@ -65,7 +65,7 @@ class FaceDataset(ImageDataset):
             'fnames': filename,
             'bb': bb if bb is not None else [0,0,0,0],
             # 'expression':self._get_expression(sample),
-            # 'id': self._get_identity(sample),
+            'id': id
         })
 
         if target is not None:
