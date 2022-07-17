@@ -224,7 +224,7 @@ class AAELandmarkTraining(AAETraining):
         self.iter_starttime = time.time()
         self.iter_in_epoch = 0
         #TODO CAMBIAR EL Shuffle y drop_last a not eval
-        dataloader = td.DataLoader(dataset, batch_size=batchsize, shuffle=False,
+        dataloader = td.DataLoader(dataset, batch_size=30, shuffle=False,
                                    num_workers=self.workers, drop_last=False)
         for data in dataloader:
             self._run_batch(data, eval=eval)
@@ -236,6 +236,10 @@ class AAELandmarkTraining(AAETraining):
         time_dataloading = time.time() - self.iter_starttime
         time_proc_start = time.time()
         iter_stats = {'time_dataloading': time_dataloading}
+        #print("***********************************************************************************************************************************")
+        #print(data['mask'])
+        #print("***********************************************************************************************************************************")
+
         batch = Batch(data, eval=eval)
         #Gradientes a 0
         self.saae.zero_grad()
@@ -268,8 +272,31 @@ class AAELandmarkTraining(AAETraining):
             X_lm_hm = self.saae.LMH(self.saae.P)#Obtiene los mapas de calor
             if batch.lm_heatmaps is not None:
                 #print("LANDMARKS ANTES DE CALCULAR EL ERROR")
-                #print(batch.mask[0])
+                print(batch.face_masks)
+                lm_hm_predict=[]
+                true_lm_hm=[]
+                #Recorremos cada imagen
+                cont_imagenes = 0
+                for v in batch.lm_heatmaps :
+                    cont_mapas_calor = 0
+                    #recorremos mapas de calor
+                    for i in v:
+                        #print("Imagen: ",cont_imagenes)
+                        if data['mask'] [cont_imagenes][cont_mapas_calor] == 1:
+                            lm_hm_predict.append(X_lm_hm[cont_imagenes][cont_mapas_calor].cpu().detach().numpy())
+                            true_lm_hm.append(i.cpu().numpy())
+                        #print(len(data['mask']))
+                        cont_mapas_calor+=1
+
+                    cont_imagenes+=1
+
+                lm_hm_predict=np.array(lm_hm_predict)
+                true_lm_hm=np.array(true_lm_hm)
+                print("DIMENSIONES LH PREDICHOS: ", lm_hm_predict.shape)
+                print("DIMENSIONES LH reales: ", true_lm_hm.shape)
+
                 loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
+                #loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
                 iter_stats.update({'loss_lms': loss_lms.item()})
 
             if eval or self._is_printout_iter(eval):
