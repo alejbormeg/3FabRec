@@ -267,8 +267,6 @@ class AAELandmarkTraining(AAETraining):
             self.saae.LMH.train(train_lmhead) #Si train_lmhead=True ponemos modo entrenamiento
             X_lm_hm = self.saae.LMH(self.saae.P)#Obtiene los mapas de calor
             if batch.lm_heatmaps is not None:
-                #print("LANDMARKS ANTES DE CALCULAR EL ERROR")
-                #print(batch.mask[0])
                 loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
                 iter_stats.update({'loss_lms': loss_lms.item()})
 

@@ -67,7 +67,6 @@ class FaceDataset(ImageDataset):
             # 'expression':self._get_expression(sample),
             'id': id
         })
-        print(mask)
         if target is not None:
             sample['target'] = target
 
