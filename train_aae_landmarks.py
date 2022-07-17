@@ -224,7 +224,7 @@ class AAELandmarkTraining(AAETraining):
         self.iter_starttime = time.time()
         self.iter_in_epoch = 0
         #TODO CAMBIAR EL Shuffle y drop_last a not eval
-        dataloader = td.DataLoader(dataset, batch_size=30, shuffle=False,
+        dataloader = td.DataLoader(dataset, batch_size=batchsize, shuffle=False,
                                    num_workers=self.workers, drop_last=False)
         for data in dataloader:
             self._run_batch(data, eval=eval)
@@ -283,20 +283,21 @@ class AAELandmarkTraining(AAETraining):
                     for i in v:
                         #print("Imagen: ",cont_imagenes)
                         if data['mask'] [cont_imagenes][cont_mapas_calor] == 1:
-                            lm_hm_predict.append(X_lm_hm[cont_imagenes][cont_mapas_calor].cpu().detach().numpy())
+                            lm_hm_predict.append(X_lm_hm[cont_imagenes][cont_mapas_calor].cpu())
                             true_lm_hm.append(i.cpu().numpy())
                         #print(len(data['mask']))
                         cont_mapas_calor+=1
 
                     cont_imagenes+=1
 
-                lm_hm_predict=np.array(lm_hm_predict)
+                lm_hm_predict=torch.stack(lm_hm_predict)
                 true_lm_hm=np.array(true_lm_hm)
+                true_lm_hm=torch.from_numpy(true_lm_hm)
                 print("DIMENSIONES LH PREDICHOS: ", lm_hm_predict.shape)
                 print("DIMENSIONES LH reales: ", true_lm_hm.shape)
-
-                loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
+                loss_lms = F.mse_loss(true_lm_hm, lm_hm_predict) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
                 #loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
+                print("Error: ", loss_lms)
                 iter_stats.update({'loss_lms': loss_lms.item()})
 
             if eval or self._is_printout_iter(eval):

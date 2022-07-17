@@ -64,11 +64,11 @@ class FaceDataset(ImageDataset):
                 target = self.crop_to_tensor(target)
 
         sample.update({
+            'mask': mask,
             'fnames': filename,
             'bb': bb if bb is not None else [0,0,0,0],
             # 'expression':self._get_expression(sample),
-            'id': id,
-            'mask': mask
+            'id': id
         })
         if target is not None:
             sample['target'] = target

@@ -51,6 +51,7 @@ class Batch:
 
         self.eval = eval
         self.masks = data['mask']
+
         try:
             self.ids = data['id']
             try:

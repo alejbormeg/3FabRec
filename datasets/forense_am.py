@@ -129,10 +129,16 @@ class FORENSE_AM(facedataset.FaceDataset):
         landmarks = sample.landmarks_full
         landmarks=ast.literal_eval(landmarks)
         landmarks=np.array(landmarks)
-        masks=ast.literal_eval(sample.masks)
+        masks=np.array(ast.literal_eval(sample.masks))
         landmarks_for_crop = landmarks if self.crop_source == 'lm_ground_truth' else None
-        return self.get_sample(sample.fnames, bb, landmarks_for_crop=landmarks_for_crop, id=face_id,
+        #print("*************** ANTES DE GET SAMPLE ************************")
+        #print(sample)
+        real_sample=self.get_sample(sample.fnames, bb, landmarks_for_crop=landmarks_for_crop, id=face_id,
                                     landmarks_to_return=landmarks, mask=masks)
+        #print("*************** DESPUES DE GET SAMPLE ************************")
+        #print(real_sample)
+
+        return  real_sample
 
 
 import config
