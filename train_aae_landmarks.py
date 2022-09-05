@@ -95,6 +95,8 @@ class AAELandmarkTraining(AAETraining):
                      'l_lms={avg_loss_lms:.4f} '
                      'err_lms={avg_err_lms:.2f}/{avg_err_lms_outline:.2f}/{avg_err_lms_all:.2f} '
                      '{t_data:.2f}/{t_proc:.2f}/{t:.2f}s ({total_iter:06d} {total_time})'][0]
+
+
         log.info(str_stats.format(
             ep=current['epoch'] + 1, i=current['iter'] + 1, iters_per_epoch=self.iters_per_epoch,
             avg_loss=means.get('loss', -1),
@@ -167,7 +169,7 @@ class AAELandmarkTraining(AAETraining):
         if self.args.eval and nmes is not None:
             # benchmark_mode = hasattr(self.args, 'benchmark')
             # self.print_eval_metrics(nmes, show=benchmark_mode)
-            self.print_eval_metrics(nmes, show=False)
+            self.print_eval_metrics(nmes, show=True)
 
 
     def eval_epoch(self):
@@ -198,7 +200,7 @@ class AAELandmarkTraining(AAETraining):
             epoch_starttime = time.time()
 
             self._run_epoch(self.datasets[TRAIN])
-
+            self.snapshot_interval=10
             # save model every few epochs
             if (self.epoch + 1) % self.snapshot_interval == 0:
                 log.info("*** saving snapshot *** ")
@@ -223,7 +225,7 @@ class AAELandmarkTraining(AAETraining):
         self.iters_per_epoch = int(len(dataset) / batchsize)
         self.iter_starttime = time.time()
         self.iter_in_epoch = 0
-        #TODO CAMBIAR EL Shuffle y drop_last a not eval
+
         dataloader = td.DataLoader(dataset, batch_size=batchsize, shuffle=False,
                                    num_workers=self.workers, drop_last=False)
         for data in dataloader:
@@ -268,7 +270,6 @@ class AAELandmarkTraining(AAETraining):
             X_lm_hm = self.saae.LMH(self.saae.P)#Obtiene los mapas de calor
             if batch.lm_heatmaps is not None:
                 #print("LANDMARKS ANTES DE CALCULAR EL ERROR")
-                print(batch.face_masks)
                 lm_hm_predict=[]
                 true_lm_hm=[]
                 #Recorremos cada imagen
