@@ -24,6 +24,7 @@ import aae_training
 
 class AAELandmarkTraining(AAETraining):
 
+
     def __init__(self, datasets, args, session_name='debug', **kwargs):
         args.reset = False  # just to make sure we don't reset the discriminator by accident
         try:
@@ -40,6 +41,7 @@ class AAELandmarkTraining(AAETraining):
         self.optimizer_lm_head = optim.Adam(self.saae.LMH.parameters(), lr=args.lr_heatmaps, betas=(0.9,0.999))
         self.optimizer_E = optim.Adam(self.saae.Q.parameters(), lr=0.00002, betas=(0.9, 0.999))
         # self.optimizer_G = optim.Adam(self.saae.P.parameters(), lr=0.00002, betas=(0.9, 0.999)) #No se define para G por el FineTuning
+        self.output_stats=pd.DataFrame(columns=['Epochs','Seconds per epoch', 'Reconstruction Error', 'Normalized Mean Error for landmarks'])
 
     def _get_network(self, pretrained):
         return fabrec.Fabrec(self.num_landmarks, input_size=self.args.input_size, z_dim=self.args.embedding_dims)
@@ -89,7 +91,7 @@ class AAELandmarkTraining(AAETraining):
 
         str_stats = ['[{ep}][{i}/{iters_per_epoch}] '
                      'l_rec={avg_loss_recon:.3f} '
-                     # 'ssim={avg_ssim:.3f} '
+                     'ssim={avg_ssim:.3f} '
                      # 'ssim_torch={avg_ssim_torch:.3f} '
                      # 'z_mu={avg_z_recon_mean: .3f} '
                      'l_lms={avg_loss_lms:.4f} '
@@ -135,12 +137,21 @@ class AAELandmarkTraining(AAETraining):
         log.info("{}".format('-' * 100))
         str_stats = ['           '
                      'l_rec={avg_loss_recon:.3f} '
-                     # 'ssim={avg_ssim:.3f} '
+                     'ssim={avg_ssim:.3f} '
                      # 'ssim_torch={avg_ssim_torch:.3f} '
                      # 'z_mu={avg_z_recon_mean:.3f} '
                      'l_lms={avg_loss_lms:.4f} '
                      'err_lms={avg_err_lms:.2f}/{avg_err_lms_outline:.2f}/{avg_err_lms_all:.2f} '
                      '\tT: {time_epoch}'][0]
+        data = {
+            'Epochs': means.get('epoch'),
+            'Seconds per epoch': duration ,
+            'Reconstruction Error': means.get('loss_recon'),
+            'Normalized Mean Error for landmarks': means.get('loss_lms')
+        }
+        self.output_stats=self.output_stats.append(data,ignore_index=True)
+
+        print(self.output_stats)
         log.info(str_stats.format(
             iters_per_epoch=self.iters_per_epoch,
             avg_loss=means.get('loss', -1),
@@ -217,6 +228,8 @@ class AAELandmarkTraining(AAETraining):
                 self.eval_epoch()
             self.epoch += 1
 
+        #Save output stats
+        self.output_stats.to_csv("./data/Outputs/"+partition+".csv")
         time_elapsed = time.time() - self.time_start_training
         log.info('Training completed in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 

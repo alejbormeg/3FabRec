@@ -11,6 +11,11 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="alejbormeg &lt;alejbormeg@gmail.com&gt;" />
+      </list>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="2BzCCqxGsdUFq1p4A4ix6UUUSax" />
@@ -64,12 +69,32 @@
       <workItem from="1657983885384" duration="7092000" />
       <workItem from="1657992072664" duration="3809000" />
       <workItem from="1658048950867" duration="11190000" />
-      <workItem from="1658082880205" duration="1362000" />
+      <workItem from="1658082880205" duration="4395000" />
+      <workItem from="1658156000389" duration="6000" />
+      <workItem from="1658162639181" duration="701000" />
+      <workItem from="1658221059042" duration="5040000" />
+      <workItem from="1662049571639" duration="958000" />
+      <workItem from="1662133278981" duration="4893000" />
+      <workItem from="1662204008113" duration="502000" />
+      <workItem from="1662392431869" duration="29000" />
+      <workItem from="1662396199644" duration="6335000" />
     </task>
+    <task id="LOCAL-00001" summary="change snapshot freq">
+      <created>1662397961147</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1662397961147</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="change snapshot freq" />
+    <option name="LAST_COMMIT_MESSAGE" value="change snapshot freq" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1658080770817" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
