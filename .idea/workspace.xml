@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/csl_common/vis/vis.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/vis/vis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/landmarks/lmvis.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmvis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_aae_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_aae_landmarks.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -77,7 +79,8 @@
       <workItem from="1662133278981" duration="4893000" />
       <workItem from="1662204008113" duration="502000" />
       <workItem from="1662392431869" duration="29000" />
-      <workItem from="1662396199644" duration="6335000" />
+      <workItem from="1662396199644" duration="6395000" />
+      <workItem from="1662479734895" duration="5174000" />
     </task>
     <task id="LOCAL-00001" summary="change snapshot freq">
       <created>1662397961147</created>
@@ -86,7 +89,14 @@
       <option name="project" value="LOCAL" />
       <updated>1662397961147</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary=".csv files with stats added at the end of each training">
+      <created>1662402582629</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1662402582629</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -94,7 +104,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="change snapshot freq" />
-    <option name="LAST_COMMIT_MESSAGE" value="change snapshot freq" />
+    <MESSAGE value=".csv files with stats added at the end of each training" />
+    <option name="LAST_COMMIT_MESSAGE" value=".csv files with stats added at the end of each training" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1658080770817" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />

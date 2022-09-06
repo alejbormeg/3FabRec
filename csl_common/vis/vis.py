@@ -312,7 +312,9 @@ def add_landmarks_to_images(images, landmarks, color=None, radius=2, gt_landmark
 
             colors = sns.color_palette("Set1", n_colors=len(lm))
             for i in range(0,len(lm)):
-                cv2.circle(disp, tuple(lm[i].astype(int)), radius=radius, color=colors[i], thickness=2, lineType=cv2.LINE_AA)
+                #cv2.circle(disp, tuple(lm[i].astype(int)), radius=radius, color=colors[i], thickness=2, lineType=cv2.LINE_AA)
+                cv2.circle(disp, tuple(lm[i].astype(int)), radius=radius, color=color, thickness=2, lineType=cv2.LINE_AA)
+
     return new_images
 
 

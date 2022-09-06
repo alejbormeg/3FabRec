@@ -183,7 +183,7 @@ class AAELandmarkTraining(AAETraining):
             self.print_eval_metrics(nmes, show=True)
 
 
-    def eval_epoch(self):
+    def eval_epoch(self,filename=""):
         log.info("")
         log.info("Evaluating '{}'...".format(self.session_name))
         # log.info("")
@@ -192,7 +192,7 @@ class AAELandmarkTraining(AAETraining):
         self.epoch_stats = []
         self.saae.eval()
 
-        self._run_epoch(self.datasets[VAL], eval=True)
+        self._run_epoch(self.datasets[VAL], eval=True,filename=filename)
         # print average loss and accuracy over epoch
         self._print_epoch_summary(self.epoch_stats, epoch_starttime)
         return self.epoch_stats
@@ -225,7 +225,7 @@ class AAELandmarkTraining(AAETraining):
                 self.eval_epoch()
             """
             if self.epoch+1 == num_epochs:
-                self.eval_epoch()
+                self.eval_epoch(filename=partition+'eval')
             self.epoch += 1
 
         #Save output stats
@@ -233,7 +233,7 @@ class AAELandmarkTraining(AAETraining):
         time_elapsed = time.time() - self.time_start_training
         log.info('Training completed in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
-    def _run_epoch(self, dataset, eval=False):
+    def _run_epoch(self, dataset, eval=False,filename=""):
         batchsize = self.args.batchsize_eval if eval else self.args.batchsize
         self.iters_per_epoch = int(len(dataset) / batchsize)
         self.iter_starttime = time.time()
@@ -242,12 +242,12 @@ class AAELandmarkTraining(AAETraining):
         dataloader = td.DataLoader(dataset, batch_size=batchsize, shuffle=False,
                                    num_workers=self.workers, drop_last=False)
         for data in dataloader:
-            self._run_batch(data, eval=eval)
             self.total_iter += 1
-            self.saae.total_iter = self.total_iter
             self.iter_in_epoch += 1
+            self._run_batch(data, eval=eval,filename=filename+ str(self.iter_in_epoch))
+            self.saae.total_iter = self.total_iter
 
-    def _run_batch(self, data, eval=False, ds=None):
+    def _run_batch(self, data, eval=False, ds=None,filename=""):
         time_dataloading = time.time() - self.iter_starttime
         time_proc_start = time.time()
         iter_stats = {'time_dataloading': time_dataloading}
@@ -353,7 +353,8 @@ class AAELandmarkTraining(AAETraining):
                                   landmarks_no_outline=self.landmarks_no_outline,
                                   f=1.0,
                                   wait=self.wait,
-                                  draw_gt_offsets=False)
+                                  draw_gt_offsets=False,
+                                  filename=filename)
 
 
 def run():
@@ -365,6 +366,7 @@ def run():
     # log.info(json.dumps(vars(args), indent=4))
     print(args.val_count)
     datasets = {}
+
     #Cross validation 5-fold
     for i in range(5):
         for phase, dsnames, num_samples in zip((TRAIN, VAL),

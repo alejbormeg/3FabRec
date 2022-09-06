@@ -34,7 +34,7 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
                     lm_heatmaps=None, target_images=None, lm_preds_cnn=None, ds=None, wait=0, ssim_maps=None,
                     landmarks_to_draw=None, ocular_norm='outer', horizontal=False, f=1.0,
                     overlay_heatmaps_input=False, overlay_heatmaps_recon=False, clean=False,
-                    landmarks_only_outline=range(17), landmarks_no_outline=range(17,68), draw_gt_offsets=True):
+                    landmarks_only_outline=range(17), landmarks_no_outline=range(17,68), draw_gt_offsets=True,filename="data"):
 
     gt_color = (0,255,0)
     pred_color = (0,0,255)
@@ -97,10 +97,12 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
     #
     # Show input images
     #
+    #Display predicted landmarks
     disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=gt_color)
+    #Display true landmarks
     disp_images = vis.add_landmarks_to_images(disp_images, lm_preds_max[:nimgs], lm_errs=nme_per_lm,
-                                              color=pred_color, draw_wireframe=False, gt_landmarks=lm_gt,
-                                              draw_gt_offsets=draw_gt_offsets)
+                                               color=pred_color, draw_wireframe=False, gt_landmarks=lm_gt,
+                                               draw_gt_offsets=draw_gt_offsets)
 
     # disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=(1,1,1), radius=1,
     #                                           draw_dots=True, draw_wireframe=True, landmarks_to_draw=landmarks_to_draw)
@@ -184,7 +186,8 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
     if ds is not None:
         wnd_title += ds.__class__.__name__
     cv2.imshow(wnd_title, cv2.cvtColor(disp_rows, cv2.COLOR_RGB2BGR))
-    cv2.waitKey(wait)
+    cv2.imwrite('./data/Outputs/'+ filename+'.jpg',cv2.cvtColor(disp_rows, cv2.COLOR_RGB2BGR))
+    cv2.waitKey(10000)
 
 
 def visualize_images(X, X_lm_hm, landmarks=None, show_recon=True, show_landmarks=True, show_heatmaps=False,
