@@ -54,7 +54,11 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
         lm_gt = np.zeros((nimgs, num_landmarks, 2))
     else:
         lm_gt = nn.atleast3d(to_numpy(landmarks))[:nimgs]
+        print("lm_gt", lm_gt)
+        print("lm_preds_max", lm_preds_max[:nimgs])
+
         nme_per_lm = calc_landmark_nme(lm_gt, lm_preds_max[:nimgs], ocular_norm=ocular_norm, image_size=image_size)
+        print("nme_per_lm ", nme_per_lm)
         lm_ssim_errs = 1 - calc_landmark_ssim_score(images, X_recon[:nimgs], lm_gt)
 
     lm_confs = None

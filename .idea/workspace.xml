@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="">
+    <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="Changed colors for predicted landmarks and real landmarks and added a functionality for store data in each epoch in a table and in images.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/csl_common/vis/vis.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/vis/vis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aae_training.py" beforeDir="false" afterPath="$PROJECT_DIR$/aae_training.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/landmarks/lmutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmutils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/landmarks/lmvis.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmvis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_aae_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_aae_landmarks.py" afterDir="false" />
     </list>
@@ -30,10 +31,10 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/train_aae_landmarks.py" />
   </component>
   <component name="RunManager">
-    <configuration name="3FabRec" type="PythonConfigurationType" factoryName="Python">
+    <configuration name="3FabRec" type="PythonConfigurationType" factoryName="Python" singleton="false">
       <module name="3FabRec" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -41,13 +42,13 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="$USER_HOME$/anaconda3/envs/3FabRec/bin/python" />
-      <option name="WORKING_DIRECTORY" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_aae_landmarks.py" />
+      <option name="PARAMETERS" value="--sessionname lm_prueba2_finetuning -r lm_prueba2_finetuning/00240 --dataset forense_am --epoch 241 --train-encoder 1 --lr-heatmaps 0.0001 --beta1 0.9" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -80,7 +81,16 @@
       <workItem from="1662204008113" duration="502000" />
       <workItem from="1662392431869" duration="29000" />
       <workItem from="1662396199644" duration="6395000" />
-      <workItem from="1662479734895" duration="5174000" />
+      <workItem from="1662479734895" duration="5302000" />
+      <workItem from="1662563759725" duration="1372000" />
+      <workItem from="1662565176420" duration="4781000" />
+      <workItem from="1662655256717" duration="419000" />
+      <workItem from="1663003502930" duration="3765000" />
+      <workItem from="1663081981628" duration="5416000" />
+      <workItem from="1663693132457" duration="3000" />
+      <workItem from="1665068850749" duration="1413000" />
+      <workItem from="1665070552868" duration="178000" />
+      <workItem from="1665070843032" duration="7362000" />
     </task>
     <task id="LOCAL-00001" summary="change snapshot freq">
       <created>1662397961147</created>
@@ -96,7 +106,14 @@
       <option name="project" value="LOCAL" />
       <updated>1662402582629</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Changed colors for predicted landmarks and real landmarks and added a functionality for store data in each epoch in a table and in images.">
+      <created>1662485341377</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1662485341377</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -105,9 +122,21 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="change snapshot freq" />
     <MESSAGE value=".csv files with stats added at the end of each training" />
-    <option name="LAST_COMMIT_MESSAGE" value=".csv files with stats added at the end of each training" />
+    <MESSAGE value="Changed colors for predicted landmarks and real landmarks and added a functionality for store data in each epoch in a table and in images." />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed colors for predicted landmarks and real landmarks and added a functionality for store data in each epoch in a table and in images." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1658080770817" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1665080564486" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
