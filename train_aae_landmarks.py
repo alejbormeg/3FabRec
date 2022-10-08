@@ -46,6 +46,35 @@ class AAELandmarkTraining(AAETraining):
     def _get_network(self, pretrained):
         return fabrec.Fabrec(self.num_landmarks, input_size=self.args.input_size, z_dim=self.args.embedding_dims)
 
+    def create_batches_for_true_and_predicted_landmarks(self,batch,lm_preds_max,data):
+        lm_predict = []
+        true_lm = []
+        batch_true = []
+        batch_pred = []
+        # Recorremos cada imagen
+        cont_imagenes = 0
+        for v in batch.landmarks:
+            cont_landmarks = 0
+            # recorremos mapas de calor
+            for i in v:
+                if data['mask'][cont_imagenes][cont_landmarks] == 1:
+                    lm_predict.append(lm_preds_max[cont_imagenes][cont_landmarks])
+                    true_lm.append(i.cpu().numpy())
+                else:
+                    true_lm.append([0, 0])
+                    lm_predict.append([0, 0])
+
+                cont_landmarks += 1
+            cont_imagenes += 1
+            batch_true.append(true_lm)
+            batch_pred.append(lm_predict)
+            true_lm = []
+            lm_predict = []
+
+        batch_pred = torch.Tensor(batch_pred)
+        batch_true = torch.Tensor(batch_true)
+        return batch_pred,batch_true
+
     @staticmethod
     def print_eval_metrics(nmes, show=False):
         def ced_curve(_nmes):
@@ -292,15 +321,12 @@ class AAELandmarkTraining(AAETraining):
                             lm_hm_predict.append(X_lm_hm[cont_imagenes][cont_mapas_calor].cpu())
                             true_lm_hm.append(i.cpu().numpy())
                         cont_mapas_calor += 1
-
                     cont_imagenes += 1
 
                 lm_hm_predict = torch.stack(lm_hm_predict)
                 true_lm_hm = np.array(true_lm_hm)
                 true_lm_hm = torch.from_numpy(true_lm_hm)
-                loss_lms = F.mse_loss(true_lm_hm,
-                                      lm_hm_predict) * 100 * 3  # Calcula la distancia L2 entre los mapas de calor
-                # loss_lms = F.mse_loss(batch.lm_heatmaps, X_lm_hm) * 100 * 3 #Calcula la distancia L2 entre los mapas de calor
+                loss_lms = F.mse_loss(true_lm_hm, lm_hm_predict) * 100 * 3  # Calcula la distancia L2 entre los mapas de calor
                 iter_stats.update({'loss_lms': loss_lms.item()})
 
             if eval or self._is_printout_iter(eval):
@@ -310,56 +336,11 @@ class AAELandmarkTraining(AAETraining):
                 lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm)
 
             if eval or self._is_printout_iter(eval):
-                lm_gt = to_numpy(batch.landmarks)
-                lm_predict = []
-                true_lm = []
-                lm_predict_2=[]
-                true_lm_2=[]
-                batch_true_2=[]
-                batch_pred_2=[]
-                # Recorremos cada imagen
-                cont_imagenes = 0
-                for v in batch.landmarks:
-                    cont_landmarks = 0
-                    # recorremos mapas de calor
-                    for i in v:
-                        if data['mask'][cont_imagenes][cont_landmarks] == 1:
-                            lm_predict.append(lm_preds_max[cont_imagenes][cont_landmarks])
-                            lm_predict_2.append(lm_preds_max[cont_imagenes][cont_landmarks])
-                            true_lm.append(i.cpu().numpy())
-                            true_lm_2.append(i.cpu())
-                        else:
-                            true_lm_2.append([0,0])
-                            lm_predict_2.append([0,0])
-
-                        cont_landmarks += 1
-                    cont_imagenes += 1
-                    batch_true_2.append(true_lm_2)
-                    batch_pred_2.append(lm_predict_2)
-                    true_lm_2=[]
-                    lm_predict_2=[]
-
-                lm_predict = np.array(lm_predict)
-                true_lm = np.array(true_lm)
-                batch_pred_2 = torch.Tensor(batch_pred_2)
-                batch_true_2 = torch.Tensor(batch_true_2)
-
-                print("batch ", batch.landmarks)
-                print("true_lm_2", batch_true_2.shape)
-                print("lm_predict_2", batch_pred_2.shape)
-                nmes = lmutils.calc_landmark_nme(lm_predict, true_lm, ocular_norm=self.args.ocular_norm,
-                                                 image_size=self.args.input_size)
-                print("nmes ",nmes)
-                nmes_2 = lmutils.calc_landmark_nme(batch_pred_2, batch_true_2, ocular_norm=self.args.ocular_norm,
-                                                 image_size=self.args.input_size)
-                print("nmes2 ",nmes_2)
-
-                # nmes = lmutils.calc_landmark_nme(lm_gt, lm_preds_max, ocular_norm=self.args.ocular_norm,
-                #                                 image_size=self.args.input_size)
+                batch_pred,batch_true=self.create_batches_for_true_and_predicted_landmarks(batch,lm_preds_max,data)
+                nmes = lmutils.calc_landmark_nme(batch_pred, batch_true, ocular_norm=self.args.ocular_norm, image_size=self.args.input_size)
                 # nccs = lmutils.calc_landmark_ncc(batch.images, X_recon, lm_gt)
-                print("Valor de eval",eval)
-                print("Valor de print",self._is_printout_iter(eval))
                 iter_stats.update({'nmes': nmes})
+
         if train_lmhead:
             # if self.args.train_encoder:
             #     loss_lms = loss_lms * 80.0
@@ -375,15 +356,12 @@ class AAELandmarkTraining(AAETraining):
                            'time_processing': time.time() - time_proc_start,
                            'iter': self.iter_in_epoch, 'total_iter': self.total_iter, 'batch_size': len(batch)})
         self.iter_starttime = time.time()
-
         self.epoch_stats.append(iter_stats)
 
         # print stats every N mini-batches
         if self._is_printout_iter(eval):
             self._print_iter_stats(self.epoch_stats[-self._print_interval(eval):])
-
-            '''
-            lmvis.visualize_batch(batch.images, batch.landmarks, X_recon, X_lm_hm, lm_preds_max,
+            lmvis.visualize_batch(batch.images, batch_true, X_recon, X_lm_hm, batch_pred,
                                   lm_heatmaps=batch.lm_heatmaps,
                                   target_images=batch.target_images,
                                   ds=ds,
@@ -397,23 +375,6 @@ class AAELandmarkTraining(AAETraining):
                                   wait=self.wait,
                                   draw_gt_offsets=False,
                                   filename=filename)
-            '''
-            lmvis.visualize_batch(batch.images, batch_true_2, X_recon, X_lm_hm, batch_pred_2,
-                                  lm_heatmaps=batch.lm_heatmaps,
-                                  target_images=batch.target_images,
-                                  ds=ds,
-                                  ocular_norm=self.args.ocular_norm,
-                                  clean=False,
-                                  overlay_heatmaps_input=False,
-                                  overlay_heatmaps_recon=False,
-                                  landmarks_only_outline=self.landmarks_only_outline,
-                                  landmarks_no_outline=self.landmarks_no_outline,
-                                  f=1.0,
-                                  wait=self.wait,
-                                  draw_gt_offsets=False,
-                                  filename=filename)
-
-
 
 def run():
     from csl_common.utils.common import init_random
