@@ -541,7 +541,7 @@ def add_arguments(parser, defaults=None):
     parser.add_argument('--print-freq', '-p', default=50, type=int, metavar='N', help='print every N steps')
     parser.add_argument('--print-freq-eval', default=1, type=int, metavar='N', help='print every N steps')
     parser.add_argument('--eval-freq', default=10, type=int, metavar='N', help='evaluate every N steps')
-    parser.add_argument('--batchsize-eval', default=20, type=int, metavar='N', help='batch size for evaluation')
+    parser.add_argument('--batchsize-eval', default=10, type=int, metavar='N', help='batch size for evaluation')
 
     # data
     parser.add_argument('--use-cache', type=bool_str, default=True, help='use cached crops')

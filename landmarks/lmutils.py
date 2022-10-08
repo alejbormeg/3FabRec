@@ -248,6 +248,7 @@ def get_landmark_confs(X_lm_hm):
 
 
 def calc_landmark_nme(gt_lms, pred_lms, ocular_norm='pupil', image_size=None):
+
     def reformat(lms):
         lms = to_numpy(lms)
         if len(lms.shape) == 2:
@@ -257,6 +258,7 @@ def calc_landmark_nme(gt_lms, pred_lms, ocular_norm='pupil', image_size=None):
     pred = reformat(pred_lms)
     assert(len(gt.shape) == 3)
     assert(len(pred.shape) == 3)
+
     if gt.shape[1] == 5:  # VGGFace2
        ocular_dists = np.sqrt(np.sum((gt[:, 1] - gt[:, 0])**2, axis=1))
     elif gt.shape[1] == 19:  # AFLW

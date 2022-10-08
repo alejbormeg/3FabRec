@@ -176,7 +176,8 @@ class AAEUnsupervisedTraining(AAETraining):
             self._run_epoch(self.datasets[TRAIN])
 
             # save model every few epochs
-            if (self.epoch+1) % self.snapshot_interval == 0:
+            #if (self.epoch+1) % self.snapshot_interval == 0:
+            if (self.epoch+1) % 10 == 0:
                 log.info("*** saving snapshot *** ")
                 self._save_snapshot(is_best=False)
 

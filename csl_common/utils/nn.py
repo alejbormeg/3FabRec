@@ -50,6 +50,7 @@ class Batch:
         self.images = atleast4d(data['image'])
 
         self.eval = eval
+        self.masks = data['mask']
 
         try:
             self.ids = data['id']

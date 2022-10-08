@@ -44,11 +44,13 @@ class FaceDataset(ImageDataset):
         relative_landmarks = self._crop_landmarks(landmarks_to_return) \
             if landmarks_to_return is not None else self.empty_landmarks
 
+
         #self.show_landmarks(image, relative_landmarks)
         sample = {
                   'image': image,
                   'landmarks': relative_landmarks,
                   'pose': np.zeros(3, dtype=np.float32)}
+
 
         if self.transform is not None:
             sample = self.transform(sample)
@@ -62,6 +64,7 @@ class FaceDataset(ImageDataset):
                 target = self.crop_to_tensor(target)
 
         sample.update({
+            'mask': mask,
             'fnames': filename,
             'bb': bb if bb is not None else [0,0,0,0],
             # 'expression':self._get_expression(sample),
@@ -76,6 +79,7 @@ class FaceDataset(ImageDataset):
             scaled_landmarks = sample['landmarks'] * (heatmap_size / self.image_size)
             sample['lm_heatmaps'] = lmutils.create_landmark_heatmaps(scaled_landmarks, self.landmark_sigma,
                                                                      self.ALL_LANDMARKS, heatmap_size)
+
         return sample
 
 
