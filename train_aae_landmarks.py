@@ -514,7 +514,7 @@ if __name__ == '__main__':
 
     # Dataset
     parser.add_argument('--dataset', default=['w300'], type=str, help='dataset for training and testing',
-                        choices=['w300', 'aflw', 'wflw', 'forense_am'], nargs='+')
+                        choices=['w300', 'aflw', 'wflw', 'forense_am','forense_am_test'], nargs='+')
     parser.add_argument('--test-split', default='full', type=str, help='test set split for 300W/AFLW/WFLW',
                         choices=['challenging', 'common', '300w', 'full', 'frontal'] + wflw.SUBSETS)
 
