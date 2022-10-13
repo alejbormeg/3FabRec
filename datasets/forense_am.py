@@ -10,7 +10,7 @@ import re
 from skimage import io
 import random
 import ast
-
+from csl_common.utils import ds_utils
 
 numbers = re.compile(r'(\d+)')
 
@@ -150,12 +150,13 @@ if __name__ == '__main__':
     print('Running on device: {}'.format(device))
     csl_common.utils.common.init_random()
 
-    ds = FORENSE_AM(root='/home/alejandro/Escritorio/5ºDGIIM/Segundo Cuatrimestre/TFG/Material_Informatica/datasets/FORENSE_AM_TRAIN',train=True, deterministic=True, use_cache=True, image_size=256,crop_source='bb_ground_truth')
+    ds = FORENSE_AM(root='/home/alejandro/Escritorio/5ºDGIIM/Segundo Cuatrimestre/TFG/Material_Informatica/datasets/FORENSE_AM_TRAIN',train=True, deterministic=True, use_cache=True, image_size=256,crop_source='bb_ground_truth',transform=ds_utils.build_transform(deterministic=not True, daug=8))
     dl = td.DataLoader(ds, batch_size=10, shuffle=True, num_workers=0)
 
     for data in dl:
         batch = Batch(data, gpu=False)
+        print(batch.images.shape)
         inputs = batch.images.clone()
         denormalize(inputs)
         imgs = vis.add_landmarks_to_images(inputs.numpy(), batch.landmarks.numpy(), radius=3, color=(0,255,0))
-        vis.vis_square(imgs, nCols=10, fx=1.0, fy=1.0, normalize=False)
+        vis.vis_square(imgs, nCols=10, fx=1.0, fy=1.0, normalize=False,wait=1)

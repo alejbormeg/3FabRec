@@ -130,8 +130,8 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
         lm_errs_max_all = calc_landmark_nme_per_img(lm_gt, lm_preds_max, ocular_norm,
                                                     list(landmarks_only_outline)+list(landmarks_no_outline),
                                                     image_size=image_size)
-        disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max, loc='br-2', format_string='{:>5.2f}', vmax=15)
-        disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max_outline, loc='br-1', format_string='{:>5.2f}', vmax=15)
+        #disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max, loc='br-2', format_string='{:>5.2f}', vmax=15)
+        #disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max_outline, loc='br-1', format_string='{:>5.2f}', vmax=15)
         disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max_all, loc='br', format_string='{:>5.2f}', vmax=15)
     disp_X_recon = vis.add_landmarks_to_images(disp_X_recon, lm_gt, color=gt_color, draw_wireframe=True)
 
@@ -187,7 +187,7 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
         wnd_title += ds.__class__.__name__
     cv2.imshow(wnd_title, cv2.cvtColor(disp_rows, cv2.COLOR_RGB2BGR))
     cv2.imwrite('./data/Outputs/'+ filename+'.jpg',cv2.cvtColor(disp_rows, cv2.COLOR_RGB2BGR))
-    cv2.waitKey(10000)
+    cv2.waitKey(10)
 
 
 def visualize_images(X, X_lm_hm, landmarks=None, show_recon=True, show_landmarks=True, show_heatmaps=False,
