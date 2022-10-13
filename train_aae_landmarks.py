@@ -48,6 +48,10 @@ class AAELandmarkTraining(AAETraining):
             columns=['Landmark', 'Media NME por landmark']
         )
         self.reconstruction_errors_val=[]
+        self.images_nmes_train=[]
+        self.images_nmes_eval=[]
+        self.train_nmes=[]
+        self.eval_nmes=[]
 
     def _get_network(self, pretrained):
         return fabrec.Fabrec(self.num_landmarks, input_size=self.args.input_size, z_dim=self.args.embedding_dims)
@@ -151,6 +155,9 @@ class AAELandmarkTraining(AAETraining):
             avg_err_lms_all=nmes[:, self.all_landmarks].mean(),
             total_iter=self.total_iter + 1, total_time=str(datetime.timedelta(seconds=self._training_time()))
         ))
+
+    def create_learning_curves(self):
+        print("Hola")
 
     def compute_mean(selfself, v,partition=''):
         i = 0
@@ -285,6 +292,7 @@ class AAELandmarkTraining(AAETraining):
             if self._is_eval_epoch():
                 self.eval_epoch()
             """
+            #TODO Esto comentado era como estaba antes el framework
             if self.epoch + 1 == num_epochs:
                 self.eval_epoch(filename=partition + 'eval')
             self.epoch += 1
@@ -295,6 +303,9 @@ class AAELandmarkTraining(AAETraining):
         self.eval_stats_landmark.to_csv("./data/Outputs/" + partition+"_eval_landmark" + ".csv")
 
         time_elapsed = time.time() - self.time_start_training
+
+        #TODO Revisar, calculamos curvas de aprendizaje
+        self.create_learning_curves()
         log.info('Training completed in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
     def _run_epoch(self, dataset, eval=False, filename=""):
@@ -310,6 +321,24 @@ class AAELandmarkTraining(AAETraining):
             self.iter_in_epoch += 1
             self._run_batch(data, eval=eval, filename=filename + str(self.iter_in_epoch))
             self.saae.total_iter = self.total_iter
+
+        #TODO Revisar, calculamos los nmes para curvas de aprendizaje
+        if eval:
+            sum=0
+            for elem in self.images_nmes_eval:
+                sum+=elem
+            self.eval_nmes.append(sum/len(self.images_nmes_eval))
+            self.images_nmes_eval=[]
+        else:
+            sum=0
+            print("Lista de los nmes de train: ", self.images_nmes_train)
+            for elem in self.images_nmes_train:
+                sum+=elem
+            self.eval_nmes.append(sum/len(self.images_nmes_train))
+            self.images_nmes_train=[]
+
+
+
 
     def _run_batch(self, data, eval=False, ds=None, filename=""):
         time_dataloading = time.time() - self.iter_starttime
@@ -368,9 +397,24 @@ class AAELandmarkTraining(AAETraining):
                                       lm_hm_predict) * 100 * 3  # Calcula la distancia L2 entre los mapas de calor
                 iter_stats.update({'loss_lms': loss_lms.item()})
 
+            #TODO revisar esta sección, pues cambia mucho cómo funciona el framework
+            X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm)
+            lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm)
+            batch_pred, batch_true = self.create_batches_for_true_and_predicted_landmarks(batch, lm_preds_max, data)
+            nmes = lmutils.calc_landmark_nme(batch_pred, batch_true, ocular_norm=self.args.ocular_norm,
+                                             image_size=self.args.input_size)
+
+            iter_stats.update({'nmes': nmes})
+
+            if not eval:
+                for v in nmes:
+                    self.images_nmes_train.append(self.compute_mean(v))
+            else:
+                for v in nmes:
+                    self.images_nmes_eval.append(self.compute_mean(v))
+
+            '''
             if eval or self._is_printout_iter(eval):
-                # expensive, so only calculate when every N iterations
-                # X_lm_hm = lmutils.decode_heatmap_blob(X_lm_hm)
                 X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm)
                 lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm)
 
@@ -378,8 +422,8 @@ class AAELandmarkTraining(AAETraining):
                 batch_pred, batch_true = self.create_batches_for_true_and_predicted_landmarks(batch, lm_preds_max, data)
                 nmes = lmutils.calc_landmark_nme(batch_pred, batch_true, ocular_norm=self.args.ocular_norm,
                                                  image_size=self.args.input_size)
-                # nccs = lmutils.calc_landmark_ncc(batch.images, X_recon, lm_gt)
                 iter_stats.update({'nmes': nmes})
+            '''
 
         if train_lmhead:
             # if self.args.train_encoder:
