@@ -66,7 +66,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_aae_landmarks.py" />
-      <option name="PARAMETERS" value="--sessionname Basemodel -r lms_aflw --dataset forense_am --epoch 161 --save-freq 10" />
+      <option name="PARAMETERS" value="--sessionname Basemodel -r lms_aflw --dataset forense_am --epoch 163 --save-freq 10" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -199,7 +199,7 @@
       <workItem from="1665587435903" duration="10580000" />
       <workItem from="1665599029025" duration="633000" />
       <workItem from="1665648174050" duration="13327000" />
-      <workItem from="1665670827876" duration="2135000" />
+      <workItem from="1665670827876" duration="5386000" />
     </task>
     <task id="LOCAL-00001" summary="change snapshot freq">
       <created>1662397961147</created>
@@ -250,7 +250,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665658359395</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="We save nmes for every image during train and eval in order to make learning curves">
+      <created>1665673167069</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1665673167069</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -263,7 +270,8 @@
     <MESSAGE value="New function which creates a new batch for predicted and true landmarks" />
     <MESSAGE value="Create new class forense_am.py and forense_am_test.py for the datasets, prepared eval_landmarks.py to validate on test sets." />
     <MESSAGE value="Database split fixed. Added new stats for validation." />
-    <option name="LAST_COMMIT_MESSAGE" value="Database split fixed. Added new stats for validation." />
+    <MESSAGE value="We save nmes for every image during train and eval in order to make learning curves" />
+    <option name="LAST_COMMIT_MESSAGE" value="We save nmes for every image during train and eval in order to make learning curves" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -280,6 +288,6 @@
     <SUITE FILE_PATH="coverage/3FabRec$forense_am.coverage" NAME="forense_am Coverage Results" MODIFIED="1665589392269" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
     <SUITE FILE_PATH="coverage/3FabRec$forense_am_test.coverage" NAME="forense_am_test Coverage Results" MODIFIED="1665331643241" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
     <SUITE FILE_PATH="coverage/3FabRec$eval_landmarks.coverage" NAME="eval_landmarks Coverage Results" MODIFIED="1665332401120" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1665672905035" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1665676135462" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

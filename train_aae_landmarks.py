@@ -19,6 +19,7 @@ from train_aae_unsupervised import AAETraining
 from landmarks import lmutils, lmvis, fabrec
 import landmarks.lmconfig as lmcfg
 import aae_training
+import matplotlib.pyplot as plt
 
 class AAELandmarkTraining(AAETraining):
 
@@ -52,6 +53,8 @@ class AAELandmarkTraining(AAETraining):
         self.images_nmes_eval=[]
         self.train_nmes=[]
         self.eval_nmes=[]
+        self.num_epochs=0
+        self.total_epochs=0;
 
     def _get_network(self, pretrained):
         return fabrec.Fabrec(self.num_landmarks, input_size=self.args.input_size, z_dim=self.args.embedding_dims)
@@ -156,8 +159,16 @@ class AAELandmarkTraining(AAETraining):
             total_iter=self.total_iter + 1, total_time=str(datetime.timedelta(seconds=self._training_time()))
         ))
 
-    def create_learning_curves(self):
-        print("Hola")
+    def create_learning_curves(self,partition=''):
+        epochs=range(1,int(self.total_epochs)+1)
+
+        plt.plot(epochs,self.train_nmes,color='orange')
+        plt.plot(epochs,self.eval_nmes,color='blue')
+        plt.legend(['Curva de etrenamiento','Curva de validación'])
+        plt.title("Curvas de aprendizaje "+partition)
+        plt.xlabel('Épocas')
+        plt.ylabel('Media NME')
+        plt.savefig("./data/Outputs/curvas_aprendizaje.png")
 
     def compute_mean(selfself, v,partition=''):
         i = 0
@@ -251,7 +262,7 @@ class AAELandmarkTraining(AAETraining):
             # self.print_eval_metrics(nmes, show=benchmark_mode)
             self.print_eval_metrics(nmes, show=True)
 
-    def eval_epoch(self, filename=""):
+    def eval_epoch(self, filename="",num_epochs=0):
         log.info("")
         log.info("Evaluating '{}'...".format(self.session_name))
         # log.info("")
@@ -263,6 +274,7 @@ class AAELandmarkTraining(AAETraining):
         self._run_epoch(self.datasets[VAL], eval=True, filename=filename)
         # print average loss and accuracy over epoch
         self._print_epoch_summary(self.epoch_stats, epoch_starttime, eval=True)
+
         return self.epoch_stats
 
     def train(self, num_epochs=None, partition=''):
@@ -270,6 +282,7 @@ class AAELandmarkTraining(AAETraining):
         log.info("")
         log.info("Starting training session '{}'...".format(self.session_name))
         # log.info("")
+        self.num_epochs=num_epochs
         while num_epochs is None or self.epoch < num_epochs:
             log.info('')
             log.info('Epoch {}/{}'.format(self.epoch + 1, num_epochs))
@@ -279,6 +292,8 @@ class AAELandmarkTraining(AAETraining):
             epoch_starttime = time.time()
 
             self._run_epoch(self.datasets[TRAIN])
+            #TODO Revisar si esto falla
+            self.eval_epoch(filename=partition + 'eval')
             self.snapshot_interval = args.save_freq
             # save model every few epochs
             if (self.epoch + 1) % self.snapshot_interval == 0:
@@ -293,10 +308,13 @@ class AAELandmarkTraining(AAETraining):
                 self.eval_epoch()
             """
             #TODO Esto comentado era como estaba antes el framework
+            '''
             if self.epoch + 1 == num_epochs:
                 self.eval_epoch(filename=partition + 'eval')
-            self.epoch += 1
+            '''
 
+            self.epoch += 1
+            self.total_epochs+=1
         # Save output stats
         self.output_stats.to_csv("./data/Outputs/" + partition + ".csv")
         self.eval_stats_image.to_csv("./data/Outputs/" + partition+"_eval_images" + ".csv")
@@ -305,7 +323,7 @@ class AAELandmarkTraining(AAETraining):
         time_elapsed = time.time() - self.time_start_training
 
         #TODO Revisar, calculamos curvas de aprendizaje
-        self.create_learning_curves()
+        self.create_learning_curves(partition)
         log.info('Training completed in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
     def _run_epoch(self, dataset, eval=False, filename=""):
@@ -331,10 +349,9 @@ class AAELandmarkTraining(AAETraining):
             self.images_nmes_eval=[]
         else:
             sum=0
-            print("Lista de los nmes de train: ", self.images_nmes_train)
             for elem in self.images_nmes_train:
                 sum+=elem
-            self.eval_nmes.append(sum/len(self.images_nmes_train))
+            self.train_nmes.append(sum/len(self.images_nmes_train))
             self.images_nmes_train=[]
 
 
@@ -449,21 +466,21 @@ class AAELandmarkTraining(AAETraining):
             for i in reconstruction:
                 self.reconstruction_errors_val.append(i.cpu().numpy())
             self._print_iter_stats(self.epoch_stats[-self._print_interval(eval):])
-            lmvis.visualize_batch(batch.images, batch_true, X_recon, X_lm_hm, batch_pred,
-                                  lm_heatmaps=batch.lm_heatmaps,
-                                  target_images=batch.target_images,
-                                  ds=ds,
-                                  ocular_norm=self.args.ocular_norm,
-                                  clean=False,
-                                  overlay_heatmaps_input=False,
-                                  overlay_heatmaps_recon=False,
-                                  landmarks_only_outline=self.landmarks_only_outline,
-                                  landmarks_no_outline=self.landmarks_no_outline,
-                                  f=1.0,
-                                  wait=self.wait,
-                                  draw_gt_offsets=False,
-                                  filename=filename)
-
+            if self.epoch +1 == self.num_epochs:
+                lmvis.visualize_batch(batch.images, batch_true, X_recon, X_lm_hm, batch_pred,
+                                      lm_heatmaps=batch.lm_heatmaps,
+                                      target_images=batch.target_images,
+                                      ds=ds,
+                                      ocular_norm=self.args.ocular_norm,
+                                      clean=False,
+                                      overlay_heatmaps_input=False,
+                                      overlay_heatmaps_recon=False,
+                                      landmarks_only_outline=self.landmarks_only_outline,
+                                      landmarks_no_outline=self.landmarks_no_outline,
+                                      f=1.0,
+                                      wait=self.wait,
+                                      draw_gt_offsets=False,
+                                      filename=filename)
 
 def basemodel():
     from csl_common.utils.common import init_random
