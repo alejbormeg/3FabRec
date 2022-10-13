@@ -21,6 +21,39 @@ mouth = range(48, 68)
 
 components = [outline, eyebrow_l, eyebrow_r, nose, nostrils, eye_l, eye_r, mouth]
 
+landmarks = {
+    0: "Menton",
+    1: "Gnathion",
+    2: "Pogonion",
+    3: "Prosthion",
+    4: "Labiale Superius",
+    5: "Subnasale",
+    6: "Nasion",
+    7: "Glabella",
+    8: "Vertex",
+    9: "Left Gonion",
+    10: "Right Gonion",
+    11: "Left Zygion",
+    12: "Right Zygion",
+    13: "Left Alare",
+    14: "Right Alare",
+    15: "Left Endocanthion",
+    16: "Right Endocanthion",
+    17: "Left Exocanthion",
+    18: "Right Exocanthion",
+    19: "Left Tragion",
+    20: "Right Tragion",
+    21: "Labiale inferius",
+    22: "Trichion",
+    23: "Supramentale",
+    24: "Left Frontotemporale",
+    25: "Right Frontotemporale",
+    26: "Left Frontozygomaticus",
+    27: "Right Frontozygomaticus",
+    28: "Left Midsurpaorbital",
+    29: "Right Midsupraorbital"
+}
+
 new_layers = []
 for idx in range(20):
     lm_ids = []
@@ -233,8 +266,18 @@ def calc_landmark_nme_per_img(gt_lms, pred_lms, ocular_norm='pupil', landmarks_t
     norm_dists = calc_landmark_nme(gt_lms, pred_lms, ocular_norm, image_size=image_size)
     if landmarks_to_eval is None:
         landmarks_to_eval = range(norm_dists.shape[1])
-    return np.mean(np.array([norm_dists[:,l] for l in landmarks_to_eval]).T, axis=1)
+    mean=[]
+    for r in norm_dists:
+        i=0
+        sum=0
+        for elem in r:
+            if elem!=0.0:
+                i+=1
+                sum+=elem
+        mean.append(sum/i)
 
+    #return np.mean(np.array([norm_dists[:,l] for l in landmarks_to_eval]).T, axis=1)
+    return np.array(mean)
 
 def get_pupil_dists(lms):
     assert lms.shape[2] == 68

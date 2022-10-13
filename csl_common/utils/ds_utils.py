@@ -93,7 +93,7 @@ def read_openface_detection(lmFilepath, numpy_lmFilepath=None, from_sequence=Fal
 def build_transform(deterministic, color=True, daug=0):
     transforms = []
     if not deterministic:
-        transforms = [csl_tf.RandomHorizontalFlip(0.5)]
+        #transforms = [csl_tf.RandomHorizontalFlip(0.5)]
         if daug == 1:
             transforms += [csl_tf.RandomAffine(3, translate=[0.025, 0.025], scale=[0.975, 1.025], shear=0, keep_aspect=False)]
         elif daug == 2:
@@ -108,5 +108,8 @@ def build_transform(deterministic, color=True, daug=0):
             transforms += [csl_tf.RandomAffine(30, translate=[0.04, 0.04], scale=[0.940, 1.050], shear=5, keep_aspect=False)]
         elif daug == 7:
             transforms += [csl_tf.RandomAffine(0, translate=[0.04, 0.04], scale=[0.940, 1.050], shear=5, keep_aspect=False)]
+        elif daug ==8:
+            transforms += [csl_tf.RandomAffine(45, translate=[0.1, 0.1], scale=[0.8, 1.15], shear=4, keep_aspect=False)]
+
     return tf.Compose(transforms)
 

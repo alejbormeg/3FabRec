@@ -10,7 +10,7 @@ import re
 from skimage import io
 import random
 import ast
-
+from csl_common.utils import ds_utils
 
 numbers = re.compile(r'(\d+)')
 
@@ -53,7 +53,7 @@ class FORENSE_AM(facedataset.FaceDataset):
 
     def make_split(self, cross_val_split,split):
         df = pd.read_csv(os.path.join(self.root, 'annotations.csv'),index_col=0)
-        ids = list(range(164))
+        ids = list(range(131))
         annotations=df
         print("\t\t\tPARAMETROS")
         print("\t\t\tCross_val_split", cross_val_split)
@@ -108,7 +108,6 @@ class FORENSE_AM(facedataset.FaceDataset):
             elif (split == 'test'):
                 test_ids = ids[int(len(ids) * 0.6):int(len(ids) * 0.8)]
                 annotations = df[df.ra.isin(test_ids)]
-
         # quinto 20% de los datos para test y 80% restante para train
         elif (cross_val_split ==5):
             if (split == 'train'):
@@ -131,13 +130,8 @@ class FORENSE_AM(facedataset.FaceDataset):
         landmarks=np.array(landmarks)
         masks=np.array(ast.literal_eval(sample.masks))
         landmarks_for_crop = landmarks if self.crop_source == 'lm_ground_truth' else None
-        #print("*************** ANTES DE GET SAMPLE ************************")
-        #print(sample)
         real_sample=self.get_sample(sample.fnames, bb, landmarks_for_crop=landmarks_for_crop, id=face_id,
                                     landmarks_to_return=landmarks, mask=masks)
-        #print("*************** DESPUES DE GET SAMPLE ************************")
-        #print(real_sample)
-
         return  real_sample
 
 
@@ -156,12 +150,13 @@ if __name__ == '__main__':
     print('Running on device: {}'.format(device))
     csl_common.utils.common.init_random()
 
-    ds = FORENSE_AM(root='/home/alejandro/Escritorio/5ºDGIIM/Segundo Cuatrimestre/TFG/Material_Informatica/datasets/FORENSE_AM',train=True, deterministic=True, use_cache=True, image_size=256,crop_source='bb_ground_truth')
+    ds = FORENSE_AM(root='/home/alejandro/Escritorio/5ºDGIIM/Segundo Cuatrimestre/TFG/Material_Informatica/datasets/FORENSE_AM_TRAIN',train=True, deterministic=True, use_cache=True, image_size=256,crop_source='bb_ground_truth',transform=ds_utils.build_transform(deterministic=not True, daug=8))
     dl = td.DataLoader(ds, batch_size=10, shuffle=True, num_workers=0)
 
     for data in dl:
         batch = Batch(data, gpu=False)
+        print(batch.images.shape)
         inputs = batch.images.clone()
         denormalize(inputs)
         imgs = vis.add_landmarks_to_images(inputs.numpy(), batch.landmarks.numpy(), radius=3, color=(0,255,0))
-        vis.vis_square(imgs, nCols=10, fx=1.0, fy=1.0, normalize=False)
+        vis.vis_square(imgs, nCols=10, fx=1.0, fy=1.0, normalize=False,wait=1)

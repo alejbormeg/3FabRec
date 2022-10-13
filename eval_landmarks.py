@@ -64,7 +64,7 @@ if __name__ == '__main__':
     aae_training.add_arguments(parser)
 
     # Dataset
-    parser.add_argument('--dataset', default=['w300'], type=str, choices=cfg.get_registered_dataset_names(),
+    parser.add_argument('--dataset', default=['forense_am_test'], type=str, choices=['w300', 'aflw', 'wflw', 'forense_am','forense_am_test'],
                         nargs='+', help='dataset for training and testing')
     parser.add_argument('--test-split', default='full', type=str, help='test set split for 300W/AFLW/WFLW',
                         choices=['challenging', 'common', '300w', 'full', 'frontal']+wflw.SUBSETS)
