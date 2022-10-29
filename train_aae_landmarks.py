@@ -53,13 +53,19 @@ class AAELandmarkTraining(AAETraining):
         self.eval_stats_landmark = pd.DataFrame(
             columns=['Landmark', 'Media NME por landmark']
         )
+        self.comparation_metrics = pd.DataFrame(
+            columns=['Landmark', 'RMSE']
+        )
+
         self.reconstruction_errors_val=[]
         self.images_nmes_train=[]
         self.images_nmes_eval=[]
         self.train_nmes=[]
         self.eval_nmes=[]
         self.num_epochs=0
-        self.total_epochs=0;
+        self.total_epochs=0
+        self.medias_rmses=[0] * 30
+        self.cont_false_indices=[0]*30
 
     def _get_network(self, pretrained):
         return fabrec.Fabrec(self.num_landmarks, input_size=self.args.input_size, z_dim=self.args.embedding_dims)
@@ -94,7 +100,7 @@ class AAELandmarkTraining(AAETraining):
         return batch_pred, batch_true
 
     @staticmethod
-    def print_eval_metrics(nmes, show=False):
+    def print_eval_metrics(nmes,rmse,perc, show=False):
         def ced_curve(_nmes):
             y = []
             x = np.linspace(0, 10, 50)
@@ -118,6 +124,11 @@ class AAELandmarkTraining(AAETraining):
             log.info('NME:   {:>6.3f}'.format(nmes.mean() * err_scale))
             log.info('FR@10: {:>6.3f} ({})'.format(fr * 100, np.sum(nmes.mean(axis=1) > 10)))
             log.info('AUC:   {:>6.4f}'.format(auc(Y)))
+            log.info('RMSE:  {:>6.4f}'.format(rmse))
+            log.info('PERC 25:  {:>6.4f}'.format(perc[0]))
+            log.info('PERC 50:  {:>6.4f}'.format(perc[1]))
+            log.info('PERC 75:  {:>6.4f}'.format(perc[2]))
+
             # log.info('NME:   {nme:>6.3f}, FR@10: {fr:>6.3f} ({fc}), AUC:   {auc:>6.4f}'.format(
             #     nme=nmes.mean()*err_scale,
             #     fr=fr*100,
@@ -272,7 +283,7 @@ class AAELandmarkTraining(AAETraining):
         if self.args.eval and nmes is not None:
             # benchmark_mode = hasattr(self.args, 'benchmark')
             # self.print_eval_metrics(nmes, show=benchmark_mode)
-            self.print_eval_metrics(nmes, show=True)
+            self.print_eval_metrics(nmes,np.median(self.medias_rmses),np.percentile(self.medias_rmses,[25,50,75]), show=True)
 
     def eval_epoch(self, filename="",num_epochs=0):
         log.info("")
@@ -287,6 +298,14 @@ class AAELandmarkTraining(AAETraining):
         # print average loss and accuracy over epoch
         self._print_epoch_summary(self.epoch_stats, epoch_starttime, eval=True)
 
+        for i in range(30):
+            data_landmark={
+                'Landmark': lmutils.landmarks[i],
+                'RMSE': self.medias_rmses[i]
+            }
+            self.comparation_metrics= self.comparation_metrics.append(data_landmark, ignore_index=True)
+
+        self.comparation_metrics.to_csv("./data/Outputs/" + 'comparation_metrics.csv')
         return self.epoch_stats
 
     def train(self, num_epochs=None, partition=None, complex_train=False, total_train_nmes=None, total_eval_nmes=None):
@@ -368,13 +387,15 @@ class AAELandmarkTraining(AAETraining):
             self._run_batch(data, eval=eval, filename=filename + str(self.iter_in_epoch))
             self.saae.total_iter = self.total_iter
 
-        #TODO Revisar, calculamos los nmes para curvas de aprendizaje
         if eval:
             sum=0
             for elem in self.images_nmes_eval:
                 sum+=elem
             self.eval_nmes.append(sum/len(self.images_nmes_eval))
             self.images_nmes_eval=[]
+            for i in range(30):
+                self.medias_rmses[i]=self.medias_rmses[i]/(self.iter_in_epoch-self.cont_false_indices[i])
+
         else:
             sum=0
             for elem in self.images_nmes_train:
@@ -449,7 +470,14 @@ class AAELandmarkTraining(AAETraining):
             nmes = lmutils.calc_landmark_nme(batch_pred, batch_true, ocular_norm=self.args.ocular_norm,
                                              image_size=self.args.input_size)
 
-            rmses=lmutils.calc_landmark_RMSE(batch_pred,batch_true)
+            rmses_batch,false_indices=lmutils.calc_landmark_RMSE(batch_pred,batch_true)
+
+            for i in range(30):
+                if i not in false_indices:
+                    self.medias_rmses[i]+=rmses_batch[i]
+                else:
+                    self.cont_false_indices[i]+=1
+
             iter_stats.update({'nmes': nmes})
 
             if not eval:

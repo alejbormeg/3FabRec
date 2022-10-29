@@ -28,8 +28,8 @@ class FabrecEval(AAELandmarkTraining):
         self.eval_stats_image = pd.DataFrame(
             columns=['ID imagen', 'Media NME', 'Error de Reconstrucción']
         )
-        self.eval_stats_landmark = pd.DataFrame(
-            columns=['Landmark', 'Media NME por landmark']
+        self.comparation_metrics = pd.DataFrame(
+            columns=['Landmark', 'RMSE']
         )
         self.reconstruction_errors_val=[]
         self.images_nmes_train=[]
@@ -37,8 +37,9 @@ class FabrecEval(AAELandmarkTraining):
         self.train_nmes=[]
         self.eval_nmes=[]
         self.num_epochs=0
-        self.total_epochs=0;
-
+        self.total_epochs=0
+        self.medias_rmses=[0] * 30
+        self.cont_false_indices=[0]*30
 
 def run(args):
 

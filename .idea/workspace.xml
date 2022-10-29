@@ -2,15 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="Learning curves done for each partition, now we try in global">
-      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/datasets/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/landmarks/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/networks/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasets/forense_am.py" beforeDir="false" afterPath="$PROJECT_DIR$/datasets/forense_am.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/eval_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/eval_landmarks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/landmarks/lmutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmutils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/local_config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/local_config.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_aae_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_aae_landmarks.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -34,7 +28,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="fixing_database_split_problems" />
+        <entry key="$PROJECT_DIR$" value="learning_curves" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -226,7 +220,7 @@
       <workItem from="1666457949393" duration="107000" />
       <workItem from="1666797389765" duration="1000" />
       <workItem from="1666973062335" duration="5313000" />
-      <workItem from="1667028706406" duration="1321000" />
+      <workItem from="1667028706406" duration="8324000" />
     </task>
     <task id="LOCAL-00001" summary="change snapshot freq">
       <created>1662397961147</created>
@@ -298,7 +292,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665767192424</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Learning curves working as it is intended">
+      <created>1667030175071</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1667030175071</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -314,7 +315,8 @@
     <MESSAGE value="We save nmes for every image during train and eval in order to make learning curves" />
     <MESSAGE value="Now we make learning curves." />
     <MESSAGE value="Learning curves done for each partition, now we try in global" />
-    <option name="LAST_COMMIT_MESSAGE" value="Learning curves done for each partition, now we try in global" />
+    <MESSAGE value="Learning curves working as it is intended" />
+    <option name="LAST_COMMIT_MESSAGE" value="Learning curves working as it is intended" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -330,7 +332,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/3FabRec$forense_am.coverage" NAME="forense_am Coverage Results" MODIFIED="1665843422111" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
     <SUITE FILE_PATH="coverage/3FabRec$forense_am_test.coverage" NAME="forense_am_test Coverage Results" MODIFIED="1665331643241" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
-    <SUITE FILE_PATH="coverage/3FabRec$eval_landmarks.coverage" NAME="eval_landmarks Coverage Results" MODIFIED="1667029842646" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/3FabRec$eval_landmarks.coverage" NAME="eval_landmarks Coverage Results" MODIFIED="1667036590886" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1665909483115" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
