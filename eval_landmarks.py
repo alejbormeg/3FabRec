@@ -6,7 +6,12 @@ import aae_training
 from constants import VAL
 from csl_common.utils import log
 from landmarks import lmconfig
+import matplotlib.pyplot as plt
+import pandas as pd
 
+array_mean_landmarks = [0] * 30
+total_train_nmes=[]
+total_eval_nmes=[]
 
 class FabrecEval(AAELandmarkTraining):
     def __init__(self, datasets, args, session_name, **kwargs):
@@ -17,6 +22,22 @@ class FabrecEval(AAELandmarkTraining):
         self.landmarks_no_outline = ds.LANDMARKS_NO_OUTLINE
         self.landmarks_only_outline = ds.LANDMARKS_ONLY_OUTLINE
         AAETraining.__init__(self, datasets, args, session_name, **kwargs)
+        self.output_stats = pd.DataFrame(
+            columns=['Época', 'Segundos por época', 'Error de reconstrucción', 'Distancia L2 entren Heathmaps'])
+
+        self.eval_stats_image = pd.DataFrame(
+            columns=['ID imagen', 'Media NME', 'Error de Reconstrucción']
+        )
+        self.eval_stats_landmark = pd.DataFrame(
+            columns=['Landmark', 'Media NME por landmark']
+        )
+        self.reconstruction_errors_val=[]
+        self.images_nmes_train=[]
+        self.images_nmes_eval=[]
+        self.train_nmes=[]
+        self.eval_nmes=[]
+        self.num_epochs=0
+        self.total_epochs=0;
 
 
 def run(args):

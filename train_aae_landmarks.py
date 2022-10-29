@@ -24,6 +24,8 @@ import matplotlib.pyplot as plt
 array_mean_landmarks = [0] * 30
 total_train_nmes=[]
 total_eval_nmes=[]
+
+
 class AAELandmarkTraining(AAETraining):
 
     def __init__(self, datasets, args, session_name='debug', **kwargs):
@@ -52,6 +54,7 @@ class AAELandmarkTraining(AAETraining):
             columns=['Landmark', 'Media NME por landmark']
         )
         self.reconstruction_errors_val=[]
+        self.images_nmes_train=[]
         self.images_nmes_eval=[]
         self.train_nmes=[]
         self.eval_nmes=[]
@@ -286,7 +289,7 @@ class AAELandmarkTraining(AAETraining):
 
         return self.epoch_stats
 
-    def train(self, num_epochs=None, partition=''):
+    def train(self, num_epochs=None, partition=None, complex_train=False, total_train_nmes=None, total_eval_nmes=None):
 
         log.info("")
         log.info("Starting training session '{}'...".format(self.session_name))
@@ -302,12 +305,20 @@ class AAELandmarkTraining(AAETraining):
 
             self._run_epoch(self.datasets[TRAIN])
             #TODO Revisar si esto falla
-            self.eval_epoch(filename='/partition_' + partition + 'eval')
+            if partition is not None:
+                self.eval_epoch(filename='/partition_' + partition + 'eval')
+            else:
+                self.eval_epoch(filename='eval')
+
             self.snapshot_interval = args.save_freq
             # save model every few epochs
             if (self.epoch + 1) % self.snapshot_interval == 0:
                 log.info("*** saving snapshot *** ")
-                self._save_snapshot(is_best=False, partition='/partition_' + partition)
+                if partition is not None:
+                    self._save_snapshot(is_best=False, partition='/partition_' + partition)
+                else:
+                    self._save_snapshot(is_best=False)
+
 
             # print average loss and accuracy over epoch
             self._print_epoch_summary(self.epoch_stats, epoch_starttime)
@@ -325,13 +336,22 @@ class AAELandmarkTraining(AAETraining):
             self.epoch += 1
             self.total_epochs+=1
         # Save output stats
-        self.output_stats.to_csv("./data/Outputs/" + '/partition_' + partition + ".csv")
-        self.eval_stats_image.to_csv("./data/Outputs/" + '/partition_' + partition+"_eval_images" + ".csv")
-        self.eval_stats_landmark.to_csv("./data/Outputs/" + '/partition_' + partition+"_eval_landmark" + ".csv")
+        if partition is not None:
+            self.output_stats.to_csv("./data/Outputs/" + 'partition_' + partition + ".csv")
+            self.eval_stats_image.to_csv("./data/Outputs/" + 'partition_' + partition+"_eval_images" + ".csv")
+            self.eval_stats_landmark.to_csv("./data/Outputs/" + 'partition_' + partition+"_eval_landmark" + ".csv")
+        else:
+            self.output_stats.to_csv("./data/Outputs/" + 'train_stats' + ".csv")
+            self.eval_stats_image.to_csv("./data/Outputs/" + "eval_images" + ".csv")
+            self.eval_stats_landmark.to_csv("./data/Outputs/" + "eval_landmark" + ".csv")
         time_elapsed = time.time() - self.time_start_training
 
         #TODO Revisar, calculamos curvas de aprendizaje
-        self.create_learning_curves(partition)
+        if not complex_train:
+            self.create_learning_curves(partition)
+        else:
+            total_train_nmes+=self.train_nmes
+            total_eval_nmes+=self.eval_nmes
         log.info('Training completed in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
     def _run_epoch(self, dataset, eval=False, filename=""):
@@ -429,6 +449,7 @@ class AAELandmarkTraining(AAETraining):
             nmes = lmutils.calc_landmark_nme(batch_pred, batch_true, ocular_norm=self.args.ocular_norm,
                                              image_size=self.args.input_size)
 
+            rmses=lmutils.calc_landmark_RMSE(batch_pred,batch_true)
             iter_stats.update({'nmes': nmes})
 
             if not eval:
@@ -584,6 +605,8 @@ def bm_daug():
         for phase, dsnames, num_samples in zip((TRAIN, VAL),
                                                (args.dataset_train, args.dataset_val),
                                                (args.train_count, args.val_count)):
+            total_train_nmes = []
+            total_eval_nmes = []
             train = phase == TRAIN
             name = dsnames[0]
             # transform = ds_utils.build_transform(deterministic=not train, daug=6)
@@ -633,7 +656,7 @@ def bm_daug():
         if args.eval:
             fntr.eval_epoch()
         else:
-            fntr.train(num_epochs=args.epochs, partition='/partition_' + str(i + 1))
+            fntr.train(num_epochs=args.epochs, partition=str(i + 1),complex_train=True,total_train_nmes=total_train_nmes,total_eval_nmes=total_eval_nmes)
             transform = ds_utils.build_transform(deterministic=not train, daug=6)
             datasets[TRAIN] = dataset_cls(root=root,
                                           cache_root=cache_root,
@@ -641,7 +664,7 @@ def bm_daug():
                                           max_samples=num_samples,
                                           use_cache=args.use_cache,
                                           start=args.st,
-                                          test_split='test',
+                                          test_split=None,
                                           align_face_orientation=args.align,
                                           crop_source=args.crop_source,
                                           return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
@@ -649,15 +672,65 @@ def bm_daug():
                                           landmark_sigma=args.sigma,
                                           transform=transform,
                                           image_size=args.input_size,
-                                          cross_val_split=i + 1)
-
-            args.resume = "DataAugmentation/partition_" + str(i + 1) + "/00" + str(args.epochs)
+                                          cross_val_split=i + 1,
+                                          )
+            args.resume = "Prueba/partition_" + str(i + 1) + "/00" + str(args.epochs)
             daug_1 = AAELandmarkTraining(datasets, args, session_name="Daug_1", snapshot_interval=args.save_freq,
                                          workers=args.workers, wait=args.wait)
-            daug_1.train(num_epochs=args.epochs + 20, partition='/partition_' + str(i + 1) + 'daug_1')
+            daug_1.train(num_epochs=args.epochs + 40, partition=str(i + 1) + 'daug_1',complex_train=True,total_train_nmes=total_train_nmes,total_eval_nmes=total_eval_nmes)
 
-            transform = ds_utils.build_transform(deterministic=not train, daug=8)
-            datasets[TRAIN] = dataset_cls(root=root,
+        epochs=range(len(total_train_nmes))
+        plt.plot(epochs,total_train_nmes,color='orange')
+        plt.plot(epochs,total_eval_nmes,color='blue')
+        plt.legend(['Curva de etrenamiento','Curva de validación'])
+        plt.title("Curvas de aprendizaje "+str(i))
+        plt.xlabel('Épocas')
+        plt.ylabel('Media NME')
+        plt.savefig("./data/Outputs/curvas_aprendizaje_partition"+str(i)+".png")
+        plt.clf()
+
+
+
+def final_model():
+    from csl_common.utils.common import init_random
+
+    if args.seed is not None:
+        init_random(args.seed)
+
+    resume = args.resume
+    # log.info(json.dumps(vars(args), indent=4))
+    datasets = {}
+    # Cross validation 5-fold
+    for phase, dsnames, num_samples in zip((TRAIN, VAL),
+                                           (args.dataset_train, args.dataset_val),
+                                           (args.train_count, args.val_count)):
+        total_train_nmes = []
+        total_eval_nmes = []
+        train = phase == TRAIN
+        name = dsnames[0]
+        # transform = ds_utils.build_transform(deterministic=not train, daug=6)
+        transform = None
+        root, cache_root = cfg.get_dataset_paths(name)
+        dataset_cls = cfg.get_dataset_class(name)
+        args.resume = resume
+        if phase == TRAIN:
+            datasets[phase] = dataset_cls(root=root,
+                                          cache_root=cache_root,
+                                          train=train,
+                                          max_samples=num_samples,
+                                          use_cache=args.use_cache,
+                                          start=args.st,
+                                          test_split=None,
+                                          align_face_orientation=args.align,
+                                          crop_source=args.crop_source,
+                                          return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
+                                          with_occlusions=args.occ and train,
+                                          landmark_sigma=args.sigma,
+                                          transform=transform,
+                                          image_size=args.input_size,
+                                          )
+        else:
+            datasets[phase] = dataset_cls(root=root,
                                           cache_root=cache_root,
                                           train=train,
                                           max_samples=num_samples,
@@ -671,23 +744,54 @@ def bm_daug():
                                           landmark_sigma=args.sigma,
                                           transform=transform,
                                           image_size=args.input_size,
-                                          cross_val_split=i + 1)
+                                          )
 
-            args.resume = "Daug_1/partition_" + str(i + 1) + "daug_1" + "/00" + str(args.epochs + 20)
-            daug_2 = AAELandmarkTraining(datasets, args, session_name="Daug_2",
-                                         snapshot_interval=args.save_freq,
-                                         workers=args.workers, wait=args.wait)
-            daug_2.train(num_epochs=args.epochs + 40, partition='/partition_' + str(i + 1) + 'daug_2')
+    fntr = AAELandmarkTraining(datasets, args, session_name=args.sessionname, snapshot_interval=args.save_freq,
+                               workers=args.workers, wait=args.wait)
 
+    torch.backends.cudnn.benchmark = True
+    if args.eval:
+        fntr.eval_epoch()
+    else:
+        fntr.train(num_epochs=args.epochs, complex_train=True,
+                   total_train_nmes=total_train_nmes, total_eval_nmes=total_eval_nmes)
+        transform = ds_utils.build_transform(deterministic=not train, daug=6)
+        datasets[TRAIN] = dataset_cls(root=root,
+                                      cache_root=cache_root,
+                                      train=train,
+                                      max_samples=num_samples,
+                                      use_cache=args.use_cache,
+                                      start=args.st,
+                                      test_split=None,
+                                      align_face_orientation=args.align,
+                                      crop_source=args.crop_source,
+                                      return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
+                                      with_occlusions=args.occ and train,
+                                      landmark_sigma=args.sigma,
+                                      transform=transform,
+                                      image_size=args.input_size
+                                      )
+        args.resume = "FinalModel/00" + str(args.epochs)
+        daug_1 = AAELandmarkTraining(datasets, args, session_name="Daug_1", snapshot_interval=args.save_freq,
+                                     workers=args.workers, wait=args.wait)
+        daug_1.train(num_epochs=args.epochs + 40, partition='daug_1', complex_train=True,
+                     total_train_nmes=total_train_nmes, total_eval_nmes=total_eval_nmes)
 
-def fine_tuning():
-    print("Hola")
+        epochs = range(len(total_train_nmes))
+        plt.plot(epochs, total_train_nmes, color='orange')
+        plt.plot(epochs, total_eval_nmes, color='blue')
+        plt.legend(['Curva de etrenamiento', 'Curva de validación'])
+        plt.title("Curvas de aprendizaje ")
+        plt.xlabel('Épocas')
+        plt.ylabel('Media NME')
+        plt.savefig("./data/Outputs/curvas_aprendizaje.png")
+        plt.clf()
 
 
 def run():
-    basemodel()
-    # bm_daug()
-    fine_tuning()
+    #basemodel()
+    #bm_daug()
+    final_model()
 
 
 if __name__ == '__main__':
