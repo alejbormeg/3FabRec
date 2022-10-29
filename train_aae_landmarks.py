@@ -19,6 +19,12 @@ from train_aae_unsupervised import AAETraining
 from landmarks import lmutils, lmvis, fabrec
 import landmarks.lmconfig as lmcfg
 import aae_training
+import matplotlib.pyplot as plt
+
+array_mean_landmarks = [0] * 30
+total_train_nmes=[]
+total_eval_nmes=[]
+
 
 class AAELandmarkTraining(AAETraining):
 
@@ -36,8 +42,8 @@ class AAELandmarkTraining(AAETraining):
         super().__init__(datasets, args, session_name, macro_batch_size=0, **kwargs)
 
         self.optimizer_lm_head = optim.Adam(self.saae.LMH.parameters(), lr=args.lr_heatmaps, betas=(0.9, 0.999))
-        self.optimizer_E = optim.Adam(self.saae.Q.parameters(), lr=0.00002, betas=(0.9, 0.999))
-        # self.optimizer_G = optim.Adam(self.saae.P.parameters(), lr=0.00002, betas=(0.9, 0.999)) #No se define para G por el FineTuning
+        #self.optimizer_E = optim.Adam(self.saae.Q.parameters(), lr=0.000002, betas=(0.9, 0.999))
+        self.optimizer_G = optim.Adam(self.saae.P.parameters(), lr=0.000002, betas=(0.9, 0.999)) #No se define para G por el FineTuning
         self.output_stats = pd.DataFrame(
             columns=['Época', 'Segundos por época', 'Error de reconstrucción', 'Distancia L2 entren Heathmaps'])
 
@@ -48,6 +54,12 @@ class AAELandmarkTraining(AAETraining):
             columns=['Landmark', 'Media NME por landmark']
         )
         self.reconstruction_errors_val=[]
+        self.images_nmes_train=[]
+        self.images_nmes_eval=[]
+        self.train_nmes=[]
+        self.eval_nmes=[]
+        self.num_epochs=0
+        self.total_epochs=0;
 
     def _get_network(self, pretrained):
         return fabrec.Fabrec(self.num_landmarks, input_size=self.args.input_size, z_dim=self.args.embedding_dims)
@@ -152,14 +164,31 @@ class AAELandmarkTraining(AAETraining):
             total_iter=self.total_iter + 1, total_time=str(datetime.timedelta(seconds=self._training_time()))
         ))
 
-    def compute_mean(selfself, v,partition=''):
-        i = 0
+    def create_learning_curves(self,partition=''):
+        epochs=range(1,int(self.total_epochs)+1)
+
+        plt.plot(epochs,self.train_nmes,color='orange')
+        plt.plot(epochs,self.eval_nmes,color='blue')
+        plt.legend(['Curva de etrenamiento','Curva de validación'])
+        plt.title("Curvas de aprendizaje "+partition)
+        plt.xlabel('Épocas')
+        plt.ylabel('Media NME')
+        plt.savefig("./data/Outputs/curvas_aprendizaje_partition"+partition+".png")
+        plt.clf()
+
+    def compute_mean(selfself, v,i=None,partition=''):
+        j = 0
         sum = 0
         for elem in v:
             if elem != 0.0:
-                i += 1
+                j += 1
                 sum += elem
-        return round(sum / i,3)
+
+        result=round(sum / j,3)
+        if i is not None:
+            array_mean_landmarks[i]+=result
+        return result
+
 
     def fill_eval_stats(self, nmes):
         i = 0
@@ -177,7 +206,7 @@ class AAELandmarkTraining(AAETraining):
         for r in nmes_transpose:
             data_landmark={
                 'Landmark': lmutils.landmarks[i],
-                'Media NME por landmark': self.compute_mean(r)
+                'Media NME por landmark': self.compute_mean(r,i)
             }
             i+=1
             self.eval_stats_landmark = self.eval_stats_landmark.append(data_landmark, ignore_index=True)
@@ -193,7 +222,8 @@ class AAELandmarkTraining(AAETraining):
 
         if eval:
             nmes = np.concatenate([s['nmes'] for s in self.epoch_stats if 'nmes' in s])
-            self.fill_eval_stats(nmes)
+            if self.epoch + 1 == self.num_epochs:
+                self.fill_eval_stats(nmes)
         else:
             nmes = np.zeros((1, 100))
 
@@ -244,7 +274,7 @@ class AAELandmarkTraining(AAETraining):
             # self.print_eval_metrics(nmes, show=benchmark_mode)
             self.print_eval_metrics(nmes, show=True)
 
-    def eval_epoch(self, filename=""):
+    def eval_epoch(self, filename="",num_epochs=0):
         log.info("")
         log.info("Evaluating '{}'...".format(self.session_name))
         # log.info("")
@@ -256,13 +286,15 @@ class AAELandmarkTraining(AAETraining):
         self._run_epoch(self.datasets[VAL], eval=True, filename=filename)
         # print average loss and accuracy over epoch
         self._print_epoch_summary(self.epoch_stats, epoch_starttime, eval=True)
+
         return self.epoch_stats
 
-    def train(self, num_epochs=None, partition=''):
+    def train(self, num_epochs=None, partition=None, complex_train=False, total_train_nmes=None, total_eval_nmes=None):
 
         log.info("")
         log.info("Starting training session '{}'...".format(self.session_name))
         # log.info("")
+        self.num_epochs=num_epochs
         while num_epochs is None or self.epoch < num_epochs:
             log.info('')
             log.info('Epoch {}/{}'.format(self.epoch + 1, num_epochs))
@@ -272,11 +304,21 @@ class AAELandmarkTraining(AAETraining):
             epoch_starttime = time.time()
 
             self._run_epoch(self.datasets[TRAIN])
+            #TODO Revisar si esto falla
+            if partition is not None:
+                self.eval_epoch(filename='/partition_' + partition + 'eval')
+            else:
+                self.eval_epoch(filename='eval')
+
             self.snapshot_interval = args.save_freq
             # save model every few epochs
             if (self.epoch + 1) % self.snapshot_interval == 0:
                 log.info("*** saving snapshot *** ")
-                self._save_snapshot(is_best=False, partition=partition)
+                if partition is not None:
+                    self._save_snapshot(is_best=False, partition='/partition_' + partition)
+                else:
+                    self._save_snapshot(is_best=False)
+
 
             # print average loss and accuracy over epoch
             self._print_epoch_summary(self.epoch_stats, epoch_starttime)
@@ -285,16 +327,31 @@ class AAELandmarkTraining(AAETraining):
             if self._is_eval_epoch():
                 self.eval_epoch()
             """
+            #TODO Esto comentado era como estaba antes el framework
+            '''
             if self.epoch + 1 == num_epochs:
                 self.eval_epoch(filename=partition + 'eval')
+            '''
+
             self.epoch += 1
-
+            self.total_epochs+=1
         # Save output stats
-        self.output_stats.to_csv("./data/Outputs/" + partition + ".csv")
-        self.eval_stats_image.to_csv("./data/Outputs/" + partition+"_eval_images" + ".csv")
-        self.eval_stats_landmark.to_csv("./data/Outputs/" + partition+"_eval_landmark" + ".csv")
-
+        if partition is not None:
+            self.output_stats.to_csv("./data/Outputs/" + 'partition_' + partition + ".csv")
+            self.eval_stats_image.to_csv("./data/Outputs/" + 'partition_' + partition+"_eval_images" + ".csv")
+            self.eval_stats_landmark.to_csv("./data/Outputs/" + 'partition_' + partition+"_eval_landmark" + ".csv")
+        else:
+            self.output_stats.to_csv("./data/Outputs/" + 'train_stats' + ".csv")
+            self.eval_stats_image.to_csv("./data/Outputs/" + "eval_images" + ".csv")
+            self.eval_stats_landmark.to_csv("./data/Outputs/" + "eval_landmark" + ".csv")
         time_elapsed = time.time() - self.time_start_training
+
+        #TODO Revisar, calculamos curvas de aprendizaje
+        if not complex_train:
+            self.create_learning_curves(partition)
+        else:
+            total_train_nmes+=self.train_nmes
+            total_eval_nmes+=self.eval_nmes
         log.info('Training completed in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
     def _run_epoch(self, dataset, eval=False, filename=""):
@@ -310,6 +367,23 @@ class AAELandmarkTraining(AAETraining):
             self.iter_in_epoch += 1
             self._run_batch(data, eval=eval, filename=filename + str(self.iter_in_epoch))
             self.saae.total_iter = self.total_iter
+
+        #TODO Revisar, calculamos los nmes para curvas de aprendizaje
+        if eval:
+            sum=0
+            for elem in self.images_nmes_eval:
+                sum+=elem
+            self.eval_nmes.append(sum/len(self.images_nmes_eval))
+            self.images_nmes_eval=[]
+        else:
+            sum=0
+            for elem in self.images_nmes_train:
+                sum+=elem
+            self.train_nmes.append(sum/len(self.images_nmes_train))
+            self.images_nmes_train=[]
+
+
+
 
     def _run_batch(self, data, eval=False, ds=None, filename=""):
         time_dataloading = time.time() - self.iter_starttime
@@ -368,9 +442,25 @@ class AAELandmarkTraining(AAETraining):
                                       lm_hm_predict) * 100 * 3  # Calcula la distancia L2 entre los mapas de calor
                 iter_stats.update({'loss_lms': loss_lms.item()})
 
+            #TODO revisar esta sección, pues cambia mucho cómo funciona el framework
+            X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm)
+            lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm)
+            batch_pred, batch_true = self.create_batches_for_true_and_predicted_landmarks(batch, lm_preds_max, data)
+            nmes = lmutils.calc_landmark_nme(batch_pred, batch_true, ocular_norm=self.args.ocular_norm,
+                                             image_size=self.args.input_size)
+
+            rmses=lmutils.calc_landmark_RMSE(batch_pred,batch_true)
+            iter_stats.update({'nmes': nmes})
+
+            if not eval:
+                for v in nmes:
+                    self.images_nmes_train.append(self.compute_mean(v))
+            else:
+                for v in nmes:
+                    self.images_nmes_eval.append(self.compute_mean(v))
+
+            '''
             if eval or self._is_printout_iter(eval):
-                # expensive, so only calculate when every N iterations
-                # X_lm_hm = lmutils.decode_heatmap_blob(X_lm_hm)
                 X_lm_hm = lmutils.smooth_heatmaps(X_lm_hm)
                 lm_preds_max = self.saae.heatmaps_to_landmarks(X_lm_hm)
 
@@ -378,8 +468,8 @@ class AAELandmarkTraining(AAETraining):
                 batch_pred, batch_true = self.create_batches_for_true_and_predicted_landmarks(batch, lm_preds_max, data)
                 nmes = lmutils.calc_landmark_nme(batch_pred, batch_true, ocular_norm=self.args.ocular_norm,
                                                  image_size=self.args.input_size)
-                # nccs = lmutils.calc_landmark_ncc(batch.images, X_recon, lm_gt)
                 iter_stats.update({'nmes': nmes})
+            '''
 
         if train_lmhead:
             # if self.args.train_encoder:
@@ -388,7 +478,7 @@ class AAELandmarkTraining(AAETraining):
             self.optimizer_lm_head.step()  # Hace Backprop por la red
             if self.args.train_encoder:
                 self.optimizer_E.step()  # para el fine tuning
-                # self.optimizer_G.step()
+                #self.optimizer_G.step()
 
         # statistics
         iter_stats.update({'epoch': self.epoch, 'timestamp': time.time(),
@@ -405,24 +495,30 @@ class AAELandmarkTraining(AAETraining):
             for i in reconstruction:
                 self.reconstruction_errors_val.append(i.cpu().numpy())
             self._print_iter_stats(self.epoch_stats[-self._print_interval(eval):])
-            lmvis.visualize_batch(batch.images, batch_true, X_recon, X_lm_hm, batch_pred,
-                                  lm_heatmaps=batch.lm_heatmaps,
-                                  target_images=batch.target_images,
-                                  ds=ds,
-                                  ocular_norm=self.args.ocular_norm,
-                                  clean=False,
-                                  overlay_heatmaps_input=False,
-                                  overlay_heatmaps_recon=False,
-                                  landmarks_only_outline=self.landmarks_only_outline,
-                                  landmarks_no_outline=self.landmarks_no_outline,
-                                  f=1.0,
-                                  wait=self.wait,
-                                  draw_gt_offsets=False,
-                                  filename=filename)
+            if self.epoch +1 == self.num_epochs:
+                lmvis.visualize_batch(batch.images, batch_true, X_recon, X_lm_hm, batch_pred,
+                                      lm_heatmaps=batch.lm_heatmaps,
+                                      target_images=batch.target_images,
+                                      ds=ds,
+                                      ocular_norm=self.args.ocular_norm,
+                                      clean=False,
+                                      overlay_heatmaps_input=False,
+                                      overlay_heatmaps_recon=False,
+                                      landmarks_only_outline=self.landmarks_only_outline,
+                                      landmarks_no_outline=self.landmarks_no_outline,
+                                      f=1.0,
+                                      wait=self.wait,
+                                      draw_gt_offsets=False,
+                                      filename=filename)
+
 
 
 def basemodel():
     from csl_common.utils.common import init_random
+
+    mean_landmarks = pd.DataFrame(
+        columns=['Landmark', 'Media NME por landmark']
+    )
 
     if args.seed is not None:
         init_random(args.seed)
@@ -435,7 +531,7 @@ def basemodel():
                                                (args.train_count, args.val_count)):
             train = phase == TRAIN
             name = dsnames[0]
-            # transform = ds_utils.build_transform(deterministic=not train, daug=6)
+            #transform = ds_utils.build_transform(deterministic=not train, daug=6)
             transform = None
             root, cache_root = cfg.get_dataset_paths(name)
             dataset_cls = cfg.get_dataset_class(name)
@@ -481,8 +577,19 @@ def basemodel():
         if args.eval:
             fntr.eval_epoch()
         else:
-            fntr.train(num_epochs=args.epochs, partition='/partition_' + str(i + 1))
+            fntr.train(num_epochs=args.epochs, partition=str(i + 1))
 
+    array_mean_landmarks_ = np.around(np.array(array_mean_landmarks) / 5,3)
+    i = 0
+    for elem in array_mean_landmarks_:
+        data_landmark = {
+            'Landmark': lmutils.landmarks[i],
+            'Media NME por landmark': elem
+        }
+        i += 1
+        mean_landmarks = mean_landmarks.append(data_landmark, ignore_index=True)
+
+    mean_landmarks.to_csv("./data/Outputs/mean_landmarks.csv")
 
 def bm_daug():
     from csl_common.utils.common import init_random
@@ -490,7 +597,6 @@ def bm_daug():
     if args.seed is not None:
         init_random(args.seed)
 
-    args.sessionname = "DataAugmentation"
     resume = args.resume
     # log.info(json.dumps(vars(args), indent=4))
     datasets = {}
@@ -499,6 +605,8 @@ def bm_daug():
         for phase, dsnames, num_samples in zip((TRAIN, VAL),
                                                (args.dataset_train, args.dataset_val),
                                                (args.train_count, args.val_count)):
+            total_train_nmes = []
+            total_eval_nmes = []
             train = phase == TRAIN
             name = dsnames[0]
             # transform = ds_utils.build_transform(deterministic=not train, daug=6)
@@ -548,7 +656,7 @@ def bm_daug():
         if args.eval:
             fntr.eval_epoch()
         else:
-            fntr.train(num_epochs=args.epochs, partition='/partition_' + str(i + 1))
+            fntr.train(num_epochs=args.epochs, partition=str(i + 1),complex_train=True,total_train_nmes=total_train_nmes,total_eval_nmes=total_eval_nmes)
             transform = ds_utils.build_transform(deterministic=not train, daug=6)
             datasets[TRAIN] = dataset_cls(root=root,
                                           cache_root=cache_root,
@@ -556,7 +664,7 @@ def bm_daug():
                                           max_samples=num_samples,
                                           use_cache=args.use_cache,
                                           start=args.st,
-                                          test_split='test',
+                                          test_split=None,
                                           align_face_orientation=args.align,
                                           crop_source=args.crop_source,
                                           return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
@@ -564,15 +672,65 @@ def bm_daug():
                                           landmark_sigma=args.sigma,
                                           transform=transform,
                                           image_size=args.input_size,
-                                          cross_val_split=i + 1)
-
-            args.resume = "DataAugmentation/partition_" + str(i + 1) + "/00" + str(args.epochs)
+                                          cross_val_split=i + 1,
+                                          )
+            args.resume = "Prueba/partition_" + str(i + 1) + "/00" + str(args.epochs)
             daug_1 = AAELandmarkTraining(datasets, args, session_name="Daug_1", snapshot_interval=args.save_freq,
                                          workers=args.workers, wait=args.wait)
-            daug_1.train(num_epochs=args.epochs + 20, partition='/partition_' + str(i + 1) + 'daug_1')
+            daug_1.train(num_epochs=args.epochs + 40, partition=str(i + 1) + 'daug_1',complex_train=True,total_train_nmes=total_train_nmes,total_eval_nmes=total_eval_nmes)
 
-            transform = ds_utils.build_transform(deterministic=not train, daug=8)
-            datasets[TRAIN] = dataset_cls(root=root,
+        epochs=range(len(total_train_nmes))
+        plt.plot(epochs,total_train_nmes,color='orange')
+        plt.plot(epochs,total_eval_nmes,color='blue')
+        plt.legend(['Curva de etrenamiento','Curva de validación'])
+        plt.title("Curvas de aprendizaje "+str(i))
+        plt.xlabel('Épocas')
+        plt.ylabel('Media NME')
+        plt.savefig("./data/Outputs/curvas_aprendizaje_partition"+str(i)+".png")
+        plt.clf()
+
+
+
+def final_model():
+    from csl_common.utils.common import init_random
+
+    if args.seed is not None:
+        init_random(args.seed)
+
+    resume = args.resume
+    # log.info(json.dumps(vars(args), indent=4))
+    datasets = {}
+    # Cross validation 5-fold
+    for phase, dsnames, num_samples in zip((TRAIN, VAL),
+                                           (args.dataset_train, args.dataset_val),
+                                           (args.train_count, args.val_count)):
+        total_train_nmes = []
+        total_eval_nmes = []
+        train = phase == TRAIN
+        name = dsnames[0]
+        # transform = ds_utils.build_transform(deterministic=not train, daug=6)
+        transform = None
+        root, cache_root = cfg.get_dataset_paths(name)
+        dataset_cls = cfg.get_dataset_class(name)
+        args.resume = resume
+        if phase == TRAIN:
+            datasets[phase] = dataset_cls(root=root,
+                                          cache_root=cache_root,
+                                          train=train,
+                                          max_samples=num_samples,
+                                          use_cache=args.use_cache,
+                                          start=args.st,
+                                          test_split=None,
+                                          align_face_orientation=args.align,
+                                          crop_source=args.crop_source,
+                                          return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
+                                          with_occlusions=args.occ and train,
+                                          landmark_sigma=args.sigma,
+                                          transform=transform,
+                                          image_size=args.input_size,
+                                          )
+        else:
+            datasets[phase] = dataset_cls(root=root,
                                           cache_root=cache_root,
                                           train=train,
                                           max_samples=num_samples,
@@ -586,23 +744,54 @@ def bm_daug():
                                           landmark_sigma=args.sigma,
                                           transform=transform,
                                           image_size=args.input_size,
-                                          cross_val_split=i + 1)
+                                          )
 
-            args.resume = "Daug_1/partition_" + str(i + 1) + "daug_1" + "/00" + str(args.epochs + 20)
-            daug_2 = AAELandmarkTraining(datasets, args, session_name="Daug_2",
-                                         snapshot_interval=args.save_freq,
-                                         workers=args.workers, wait=args.wait)
-            daug_2.train(num_epochs=args.epochs + 40, partition='/partition_' + str(i + 1) + 'daug_2')
+    fntr = AAELandmarkTraining(datasets, args, session_name=args.sessionname, snapshot_interval=args.save_freq,
+                               workers=args.workers, wait=args.wait)
 
+    torch.backends.cudnn.benchmark = True
+    if args.eval:
+        fntr.eval_epoch()
+    else:
+        fntr.train(num_epochs=args.epochs, complex_train=True,
+                   total_train_nmes=total_train_nmes, total_eval_nmes=total_eval_nmes)
+        transform = ds_utils.build_transform(deterministic=not train, daug=6)
+        datasets[TRAIN] = dataset_cls(root=root,
+                                      cache_root=cache_root,
+                                      train=train,
+                                      max_samples=num_samples,
+                                      use_cache=args.use_cache,
+                                      start=args.st,
+                                      test_split=None,
+                                      align_face_orientation=args.align,
+                                      crop_source=args.crop_source,
+                                      return_landmark_heatmaps=lmcfg.PREDICT_HEATMAP,
+                                      with_occlusions=args.occ and train,
+                                      landmark_sigma=args.sigma,
+                                      transform=transform,
+                                      image_size=args.input_size
+                                      )
+        args.resume = "FinalModel/00" + str(args.epochs)
+        daug_1 = AAELandmarkTraining(datasets, args, session_name="Daug_1", snapshot_interval=args.save_freq,
+                                     workers=args.workers, wait=args.wait)
+        daug_1.train(num_epochs=args.epochs + 40, partition='daug_1', complex_train=True,
+                     total_train_nmes=total_train_nmes, total_eval_nmes=total_eval_nmes)
 
-def fine_tuning():
-    print("Hola")
+        epochs = range(len(total_train_nmes))
+        plt.plot(epochs, total_train_nmes, color='orange')
+        plt.plot(epochs, total_eval_nmes, color='blue')
+        plt.legend(['Curva de etrenamiento', 'Curva de validación'])
+        plt.title("Curvas de aprendizaje ")
+        plt.xlabel('Épocas')
+        plt.ylabel('Media NME')
+        plt.savefig("./data/Outputs/curvas_aprendizaje.png")
+        plt.clf()
 
 
 def run():
-    basemodel()
-    # bm_daug()
-    fine_tuning()
+    #basemodel()
+    #bm_daug()
+    final_model()
 
 
 if __name__ == '__main__':

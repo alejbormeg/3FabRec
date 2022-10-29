@@ -59,14 +59,18 @@ class FORENSE_AM(facedataset.FaceDataset):
         print("\t\t\tCross_val_split", cross_val_split)
         print("\t\t\tSplit", split)
 
-        #Si no se indica partición de cross-Validation 5-fold se hace partición clásica 80% entrenamiento 20% test
+        #Particion Final
         if(cross_val_split==None):
-            random.shuffle(ids)
+            df = pd.read_csv(os.path.join(self.root, 'annotations.csv'), index_col=0)
+            train_ids=[32, 94, 36, 105, 119, 86, 6, 7, 75, 108, 50, 23, 51, 79, 69, 54, 59, 127, 39, 158, 110, 26, 102, 65, 156, 95, 115, 128, 140, 106, 13, 161, 142, 29, 48, 88, 99, 129, 93, 101, 42, 150, 33, 78, 43, 87, 81, 134, 37, 25, 103, 16, 5, 154, 62, 138, 2, 45, 113, 0, 117, 27, 104, 80, 131, 73, 89, 82, 141, 58, 151, 15, 22, 66, 18, 143, 31, 130, 53, 111, 136, 124, 21, 56, 12, 14, 91, 76, 47, 139, 49, 148, 10, 160, 9, 84, 135, 121, 159, 100, 4, 122, 157, 28, 20, 64, 153, 74, 149, 152, 60, 55, 57, 70, 85, 40, 126, 114, 98, 46, 68, 38, 132, 120, 24, 17, 30, 1, 145, 96, 112]
+            test_ids=[]
+            for i in range(164):
+                if i not in train_ids:
+                    test_ids.append(i)
+
             if(split=='train'):
-                train_ids=ids[0:int(len(ids)*0.8)]
                 annotations=df[df.ra.isin(train_ids)]
             elif (split== 'test'):
-                test_ids=ids[int(len(ids)*0.8) : ]
                 annotations=df[df.ra.isin(test_ids)]
 
         #primer 20% de los datos para test y 80% restante para train
@@ -150,7 +154,7 @@ if __name__ == '__main__':
     print('Running on device: {}'.format(device))
     csl_common.utils.common.init_random()
 
-    ds = FORENSE_AM(root='/home/alejandro/Escritorio/5ºDGIIM/Segundo Cuatrimestre/TFG/Material_Informatica/datasets/FORENSE_AM_TRAIN',train=True, deterministic=True, use_cache=True, image_size=256,crop_source='bb_ground_truth',transform=ds_utils.build_transform(deterministic=not True, daug=8))
+    ds = FORENSE_AM(root='/home/alejandro/Escritorio/5ºDGIIM/Segundo Cuatrimestre/TFG/Material_Informatica/datasets/FORENSE_AM_TRAIN',Train=False,test_split='test', deterministic=True, use_cache=True, image_size=256,crop_source='bb_ground_truth',transform=None,cross_val_split=1)
     dl = td.DataLoader(ds, batch_size=10, shuffle=True, num_workers=0)
 
     for data in dl:
