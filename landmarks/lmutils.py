@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity as compare_ssim
 import torch
 import warnings
+from sklearn.metrics import mean_squared_error
 
 layers = []
 
@@ -323,6 +324,55 @@ def calc_landmark_nme(gt_lms, pred_lms, ocular_norm='pupil', image_size=None):
         ocular_dists = np.ones(gt.shape[0], dtype=np.float32) * image_size
     norm_dists = np.sqrt(np.sum((gt - pred)**2, axis=2)) / ocular_dists.reshape(len(gt), 1)
     return norm_dists * 100
+
+
+def remove_zeros(gt,pred):
+    i=0;
+    indices_to_remove=[]
+    gt_nonzeros=gt
+    pred_nonzeros=pred
+
+    for element in gt:
+        if(element[0]==0 and element[1]==0):
+            indices_to_remove.append(i)
+        i+=1
+
+    for index in sorted(indices_to_remove, reverse=True):
+        gt_nonzeros.pop(index)
+        pred_nonzeros.pop(index)
+
+    return gt_nonzeros,pred_nonzeros
+
+def calc_landmark_RMSE(gt_lms, pred_lms):
+    def reformat(lms):
+        lms = to_numpy(lms)
+        if len(lms.shape) == 2:
+            lms = lms.reshape((1,-1,2))
+        return lms
+    gt = reformat(gt_lms)
+    pred = reformat(pred_lms)
+    #RMSES wich really count to the metric it is done to prevent count 0 from non predicted landmarks
+    list_false_indices=[]
+
+    assert(len(gt.shape) == 3)
+    assert(len(pred.shape) == 3)
+    gt=list(map(list, zip(*gt)))
+    pred=list(map(list, zip(*pred)))
+    #print("Ground truth: ",gt)
+    #print("Predict: ",pred)
+    rmses=[]
+    count=0
+    for v in gt:
+        v_true,v_pred=remove_zeros(v,pred[count])
+        if(len(v_true)!=0):
+            rmses.append(mean_squared_error(v_true,v_pred,squared=False))
+        else:
+            rmses.append(0)
+            list_false_indices.append(count)
+        count+=1
+
+    return rmses,list_false_indices
+
 
 
 def calc_landmark_failure_rate(nmes, th=10.0):
