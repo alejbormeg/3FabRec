@@ -80,6 +80,7 @@ class FaceDataset(ImageDataset):
             sample['lm_heatmaps'] = lmutils.create_landmark_heatmaps(scaled_landmarks, self.landmark_sigma,
                                                                      self.ALL_LANDMARKS, heatmap_size)
 
+
         return sample
 
 

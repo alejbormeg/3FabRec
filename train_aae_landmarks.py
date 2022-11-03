@@ -301,7 +301,7 @@ class AAELandmarkTraining(AAETraining):
         for i in range(30):
             data_landmark={
                 'Landmark': lmutils.landmarks[i],
-                'RMSE': self.medias_rmses[i]
+                'RMSE': np.round(self.medias_rmses[i],2)
             }
             self.comparation_metrics= self.comparation_metrics.append(data_landmark, ignore_index=True)
 

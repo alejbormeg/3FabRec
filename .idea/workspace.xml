@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="Learning curves done for each partition, now we try in global">
+    <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eval_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/eval_landmarks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/landmarks/lmutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmutils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/csl_common/utils/image_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/utils/image_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasets/facedataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/datasets/facedataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datasets/forense_am.py" beforeDir="false" afterPath="$PROJECT_DIR$/datasets/forense_am.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_aae_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_aae_landmarks.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -28,7 +29,7 @@
     </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="learning_curves" />
+        <entry key="$PROJECT_DIR$" value="metrics" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -55,7 +56,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/train_aae_landmarks.py" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Python.eval_landmarks">
+  <component name="RunManager" selected="Python.forense_am">
     <configuration name="3FabRec" type="PythonConfigurationType" factoryName="Python" singleton="false">
       <module name="3FabRec" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -152,8 +153,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.eval_landmarks" />
         <item itemvalue="Python.forense_am" />
+        <item itemvalue="Python.eval_landmarks" />
         <item itemvalue="Python.forense_am_test" />
       </list>
     </recent_temporary>
@@ -220,7 +221,10 @@
       <workItem from="1666457949393" duration="107000" />
       <workItem from="1666797389765" duration="1000" />
       <workItem from="1666973062335" duration="5313000" />
-      <workItem from="1667028706406" duration="8324000" />
+      <workItem from="1667028706406" duration="8987000" />
+      <workItem from="1667064096214" duration="108000" />
+      <workItem from="1667303719003" duration="1672000" />
+      <workItem from="1667494569893" duration="9508000" />
     </task>
     <task id="LOCAL-00001" summary="change snapshot freq">
       <created>1662397961147</created>
@@ -299,7 +303,14 @@
       <option name="project" value="LOCAL" />
       <updated>1667030175071</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Compute RMSE and percentiles.">
+      <created>1667037315236</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1667037315236</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -316,10 +327,23 @@
     <MESSAGE value="Now we make learning curves." />
     <MESSAGE value="Learning curves done for each partition, now we try in global" />
     <MESSAGE value="Learning curves working as it is intended" />
-    <option name="LAST_COMMIT_MESSAGE" value="Learning curves working as it is intended" />
+    <MESSAGE value="Compute RMSE and percentiles." />
+    <option name="LAST_COMMIT_MESSAGE" value="Compute RMSE and percentiles." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/datasets/imagedataset.py</url>
+          <line>49</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/csl_common/utils/image_loader.py</url>
+          <line>43</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -330,7 +354,7 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/3FabRec$forense_am.coverage" NAME="forense_am Coverage Results" MODIFIED="1665843422111" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
+    <SUITE FILE_PATH="coverage/3FabRec$forense_am.coverage" NAME="forense_am Coverage Results" MODIFIED="1667503783222" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
     <SUITE FILE_PATH="coverage/3FabRec$forense_am_test.coverage" NAME="forense_am_test Coverage Results" MODIFIED="1665331643241" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
     <SUITE FILE_PATH="coverage/3FabRec$eval_landmarks.coverage" NAME="eval_landmarks Coverage Results" MODIFIED="1667036590886" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1665909483115" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
