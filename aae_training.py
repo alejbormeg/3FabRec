@@ -520,10 +520,13 @@ def add_arguments(parser, defaults=None):
     parser.add_argument('-r', '--resume', default=None, type=str, metavar='PATH', help='path to snapshot (default: None)')
     parser.add_argument('-z','--embedding-dims', default=99, type=int, help='dimensionality of embedding ')
     parser.add_argument('-i','--input-size', default=256, type=int, help='CNN input size')
+    # Added for comparison between models
+    parser.add_argument('-c','--comparison-images',default=False, type=bool,help='Generate comparison images')
 
     # training
     parser.add_argument('--train-encoder', type=bool_str, default=defaults.get('train_encoder', True),
                         help='include encoder update in training ')
+    #Added for train decoder
     parser.add_argument('--train-decoder', type=bool_str, default=defaults.get('train_decoder', True),
                         help='include decoder update in training ')
     parser.add_argument('--seed', type=int, default=None)

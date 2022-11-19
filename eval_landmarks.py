@@ -55,7 +55,7 @@ def run(args):
     datasets[VAL] = dataset_cls(root=root,
                                 cache_root=cache_root,
                                 train=False,
-                                test_split=args.test_split,
+                                test_split='test',
                                 max_samples=args.val_count,
                                 start=args.st,
                                 use_cache=args.use_cache,
@@ -70,7 +70,7 @@ def run(args):
 
     import torch
     torch.backends.cudnn.benchmark = True
-    fntr.eval_epoch()
+    fntr.eval_epoch( comparison=args.comparison_images)
 
 if __name__ == '__main__':
     # Disable traceback on Ctrl+c

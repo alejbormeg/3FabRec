@@ -4,6 +4,7 @@ import numpy as np
 
 import seaborn as sns
 from csl_common.utils.nn import to_numpy
+from sklearn.metrics import mean_squared_error
 
 
 def denormalize(tensor):
@@ -249,10 +250,20 @@ def add_landmarks_to_images(images, landmarks, color=None, radius=2, gt_landmark
             colors = color_map(errs, cmap=plt.cm.jet, vmin=0, vmax=15.0)
         if img.dtype == np.uint8:
             colors *= 255
+
+        euclidean_dist=0
+        count=0
         for i, (p1, p2) in enumerate(zip(lms, gt_lms)):
+            euclidean_dist += np.linalg.norm(p1-p2)
             if landmarks_to_draw is None or i in landmarks_to_draw:
                 if p1.min() > 0:
-                    cv2.line(img, tuple(p1.astype(int)), tuple(p2.astype(int)), colors[i], thickness=1, lineType=cv2.LINE_AA)
+                    cv2.line(img, tuple(p1.astype(int)), tuple(p2.astype(int)), color=(255,0,0), thickness=1, lineType=cv2.LINE_AA)
+
+            count +=1
+
+        cv2.rectangle(img, (0, 256), (256, 240), (255, 255, 255), -1)
+        string="Mean Euclidean Dist "+ str(round(euclidean_dist/count,2))
+        cv2.putText(img,string,org=(25,253),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale =0.5, color =(0,0,0), thickness = 1, lineType=cv2.LINE_AA)
 
     new_images = to_disp_images(images)
     landmarks = to_numpy(landmarks)

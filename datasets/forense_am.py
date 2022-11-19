@@ -66,7 +66,8 @@ class FORENSE_AM(facedataset.FaceDataset):
             test_ids=[]
             for i in range(164):
                 if i not in train_ids:
-                    test_ids.append(i)
+                    if i != 35:
+                        test_ids.append(i)
 
             if(split=='train'):
                 annotations=df[df.ra.isin(train_ids)]
@@ -163,4 +164,4 @@ if __name__ == '__main__':
         inputs = batch.images.clone()
         denormalize(inputs)
         imgs = vis.add_landmarks_to_images(inputs.numpy(), batch.landmarks.numpy(), radius=3, color=(0,255,0))
-        vis.vis_square(imgs, nCols=10, fx=1.0, fy=1.0, normalize=False,wait=1)
+        vis.vis_square(imgs, nCols=10, fx=1.0, fy=1.0, normalize=False,wait=10000)

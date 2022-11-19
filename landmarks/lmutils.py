@@ -343,6 +343,8 @@ def remove_zeros(gt,pred):
 
     return gt_nonzeros,pred_nonzeros
 
+
+# Custom Function to compute RMSE with the predicted landmarks
 def calc_landmark_RMSE(gt_lms, pred_lms):
     def reformat(lms):
         lms = to_numpy(lms)
@@ -356,10 +358,10 @@ def calc_landmark_RMSE(gt_lms, pred_lms):
 
     assert(len(gt.shape) == 3)
     assert(len(pred.shape) == 3)
+    #Transpose
     gt=list(map(list, zip(*gt)))
     pred=list(map(list, zip(*pred)))
-    #print("Ground truth: ",gt)
-    #print("Predict: ",pred)
+
     rmses=[]
     count=0
     for v in gt:
