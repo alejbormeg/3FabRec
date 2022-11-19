@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="fix: images correctly cropped.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/csl_common/utils/image_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/utils/image_loader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/csl_common/vis/vis.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/vis/vis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasets/forense_am.py" beforeDir="false" afterPath="$PROJECT_DIR$/datasets/forense_am.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/eval_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/eval_landmarks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/landmarks/lmutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmutils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/landmarks/lmvis.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmvis.py" afterDir="false" />
@@ -239,6 +237,7 @@
       <workItem from="1668193567487" duration="582000" />
       <workItem from="1668194186655" duration="7803000" />
       <workItem from="1668254896066" duration="4583000" />
+      <workItem from="1668860000920" duration="348000" />
     </task>
     <task id="LOCAL-00001" summary="change snapshot freq">
       <created>1662397961147</created>
@@ -331,7 +330,14 @@
       <option name="project" value="LOCAL" />
       <updated>1667504582558</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="change the test dataset removing one incorrect image">
+      <created>1668860348992</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1668860348992</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -350,7 +356,8 @@
     <MESSAGE value="Learning curves working as it is intended" />
     <MESSAGE value="Compute RMSE and percentiles." />
     <MESSAGE value="fix: images correctly cropped." />
-    <option name="LAST_COMMIT_MESSAGE" value="fix: images correctly cropped." />
+    <MESSAGE value="change the test dataset removing one incorrect image" />
+    <option name="LAST_COMMIT_MESSAGE" value="change the test dataset removing one incorrect image" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
