@@ -66,7 +66,8 @@ class FORENSE_AM(facedataset.FaceDataset):
             test_ids=[]
             for i in range(164):
                 if i not in train_ids:
-                    test_ids.append(i)
+                    if i != 35:
+                        test_ids.append(i)
 
             if(split=='train'):
                 annotations=df[df.ra.isin(train_ids)]
