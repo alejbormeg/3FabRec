@@ -34,7 +34,7 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
                     lm_heatmaps=None, target_images=None, lm_preds_cnn=None, ds=None, wait=0, ssim_maps=None,
                     landmarks_to_draw=None, ocular_norm='outer', horizontal=False, f=1.0,
                     overlay_heatmaps_input=False, overlay_heatmaps_recon=False, clean=False,
-                    landmarks_only_outline=range(17), landmarks_no_outline=range(17,68), draw_gt_offsets=True,filename="data"):
+                    landmarks_only_outline=range(17), landmarks_no_outline=range(17,68), draw_gt_offsets=True,filename="data",comparison=False):
 
     gt_color = (0,255,0)
     pred_color = (0,0,255)
@@ -92,27 +92,23 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
         disp_images = [vis.overlay_heatmap(disp_images[i], pred_heatmaps[i]) for i in range(len(pred_heatmaps))]
     if pred_heatmaps is not None and overlay_heatmaps_recon:
         disp_X_recon = [vis.overlay_heatmap(disp_X_recon[i], pred_heatmaps[i]) for i in range(len(pred_heatmaps))]
-
-
     #
     # Show input images
     #
-    #Display predicted landmarks
-    disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=gt_color)
-    #Display true landmarks
-    disp_images = vis.add_landmarks_to_images(disp_images, lm_preds_max[:nimgs], lm_errs=nme_per_lm,
+    #Comparison mode between HF model and model and ours
+    if(comparison):
+        #Display predicted landmarks
+        disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=gt_color,radius=0)
+        #Display true landmarks
+        disp_images = vis.add_landmarks_to_images(disp_images, lm_preds_max[:nimgs], lm_errs=nme_per_lm,
+                                                  gt_landmarks=lm_gt[:nimgs],
+                                                  color=pred_color, draw_wireframe=False,
+                                                  draw_gt_offsets=True, radius=0)
+    else:
+        disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=gt_color)
+        disp_images = vis.add_landmarks_to_images(disp_images, lm_preds_max[:nimgs], lm_errs=nme_per_lm,
                                                color=pred_color, draw_wireframe=False, gt_landmarks=lm_gt,
                                                draw_gt_offsets=draw_gt_offsets)
-
-    # disp_images = vis.add_landmarks_to_images(disp_images, lm_gt[:nimgs], color=(1,1,1), radius=1,
-    #                                           draw_dots=True, draw_wireframe=True, landmarks_to_draw=landmarks_to_draw)
-    # disp_images = vis.add_landmarks_to_images(disp_images, lm_preds_max[:nimgs], lm_errs=nme_per_lm,
-    #                                           color=(1.0, 0.0, 0.0),
-    #                                           draw_dots=True, draw_wireframe=True, radius=1,
-    #                                           gt_landmarks=lm_gt, draw_gt_offsets=False,
-    #                                           landmarks_to_draw=landmarks_to_draw)
-
-
     #
     # Show reconstructions
     #
@@ -120,26 +116,13 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
     if not clean:
         disp_X_recon = vis.add_error_to_images(disp_X_recon[:nimgs], errors=X_recon_errs, format_string='{:>4.1f}')
 
-    # modes of heatmaps
-    # disp_X_recon = [overlay_heatmap(disp_X_recon[i], pred_heatmaps[i]) for i in range(len(pred_heatmaps))]
     if not clean:
-        lm_errs_max = calc_landmark_nme_per_img(lm_gt, lm_preds_max, ocular_norm,
-                                                landmarks_no_outline, image_size=image_size)
-        lm_errs_max_outline = calc_landmark_nme_per_img(lm_gt, lm_preds_max, ocular_norm,
-                                                        landmarks_only_outline, image_size=image_size)
         lm_errs_max_all = calc_landmark_nme_per_img(lm_gt, lm_preds_max, ocular_norm,
                                                     list(landmarks_only_outline)+list(landmarks_no_outline),
                                                     image_size=image_size)
-        #disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max, loc='br-2', format_string='{:>5.2f}', vmax=15)
-        #disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max_outline, loc='br-1', format_string='{:>5.2f}', vmax=15)
         disp_X_recon = vis.add_error_to_images(disp_X_recon, lm_errs_max_all, loc='br', format_string='{:>5.2f}', vmax=15)
-    disp_X_recon = vis.add_landmarks_to_images(disp_X_recon, lm_gt, color=gt_color, draw_wireframe=True)
 
-    # disp_X_recon = vis.add_landmarks_to_images(disp_X_recon, lm_preds_max[:nimgs],
-    #                                            color=pred_color, draw_wireframe=False,
-    #                                            lm_errs=nme_per_lm, lm_confs=lm_confs,
-    #                                            lm_rec_errs=lm_ssim_errs, gt_landmarks=lm_gt,
-    #                                            draw_gt_offsets=True, draw_dots=True)
+    disp_X_recon = vis.add_landmarks_to_images(disp_X_recon, lm_gt, color=gt_color, draw_wireframe=True)
 
     disp_X_recon = vis.add_landmarks_to_images(disp_X_recon, lm_preds_max[:nimgs],
                                                color=pred_color, draw_wireframe=True,
@@ -150,10 +133,6 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
         means = lm_confs[:,lmids].mean(axis=1)
         colors = vis.color_map(to_numpy(1-means), cmap=plt.cm.jet, vmin=0.0, vmax=0.4)
         return vis.add_error_to_images(disp_X_recon, means, loc=loc, format_string='{:>4.2f}', colors=colors)
-
-    # disp_X_recon = add_confidences(disp_X_recon, lmcfg.LANDMARKS_NO_OUTLINE, 'bm-2')
-    # disp_X_recon = add_confidences(disp_X_recon, lmcfg.LANDMARKS_ONLY_OUTLINE, 'bm-1')
-    # disp_X_recon = add_confidences(disp_X_recon, lmcfg.ALL_LANDMARKS, 'bm')
 
     # print ssim errors
     ssim = np.zeros(nimgs)
@@ -168,7 +147,8 @@ def visualize_batch(images, landmarks, X_recon, X_lm_hm, lm_preds_max,
                                                loc='bl-2', format_string='{:>4.2f}', vmin=0.0, vmax=0.4)
 
     rows = [vis.make_grid(disp_images, nCols=nimgs, normalize=False)]
-    rows.append(vis.make_grid(disp_X_recon, nCols=nimgs))
+    if(not comparison):
+        rows.append(vis.make_grid(disp_X_recon, nCols=nimgs))
 
     if ssim_maps is not None:
         disp_ssim_maps = to_numpy(nn.denormalized(ssim_maps)[:nimgs].transpose(0, 2, 3, 1))

@@ -136,7 +136,7 @@ class CachedCropLoader(ImageLoader):
                     bb = get_bbox_non_black_area(img)
 
             roi = get_roi_from_bbox(bb, crop_size=self.image_size, margin=self.margin)
-            self._cropper = cropping.FaceCrop(img, output_size=self.image_size, bbox=roi,
+            self._cropper = cropping.FaceCrop(img, output_size=self.roi_size, bbox=roi,
                                               img_already_cropped=is_cached_crop)
         else:
             self._cropper = cropping.FaceCrop(img, output_size=self.roi_size, landmarks=landmarks,

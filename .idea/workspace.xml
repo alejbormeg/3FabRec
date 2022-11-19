@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="fix: images correctly cropped.">
+    <list default="true" id="76f88b9a-2ef8-4b01-9a40-12db4c694ba4" name="Changes" comment="feat: added new functionality to gen comparation images">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aae_training.py" beforeDir="false" afterPath="$PROJECT_DIR$/aae_training.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/csl_common/utils/image_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/utils/image_loader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/csl_common/vis/vis.py" beforeDir="false" afterPath="$PROJECT_DIR$/csl_common/vis/vis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/eval_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/eval_landmarks.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/landmarks/lmutils.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmutils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/landmarks/lmvis.py" beforeDir="false" afterPath="$PROJECT_DIR$/landmarks/lmvis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_aae_landmarks.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_aae_landmarks.py" afterDir="false" />
     </list>
@@ -57,7 +58,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/train_aae_landmarks.py" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
-  <component name="RunManager" selected="Python.eval_landmarks">
+  <component name="RunManager" selected="Python.3FabRec">
     <configuration name="3FabRec" type="PythonConfigurationType" factoryName="Python" singleton="false">
       <module name="3FabRec" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -72,7 +73,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_aae_landmarks.py" />
-      <option name="PARAMETERS" value="--sessionname FinalModel -r lms_aflw --dataset forense_am --epoch 220 --save-freq 10 --option 2" />
+      <option name="PARAMETERS" value="--sessionname LOL -r lms_aflw --dataset forense_am --epoch 161 --save-freq 10 --option 0" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -94,7 +95,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/eval_landmarks.py" />
-      <option name="PARAMETERS" value="-r FinalModel/partition_/00260 --dataset forense_am" />
+      <option name="PARAMETERS" value="-r FinalModel/partition_/00260 --dataset forense_am -c True" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -237,7 +238,7 @@
       <workItem from="1668193567487" duration="582000" />
       <workItem from="1668194186655" duration="7803000" />
       <workItem from="1668254896066" duration="4583000" />
-      <workItem from="1668860000920" duration="348000" />
+      <workItem from="1668860000920" duration="2532000" />
     </task>
     <task id="LOCAL-00001" summary="change snapshot freq">
       <created>1662397961147</created>
@@ -337,7 +338,21 @@
       <option name="project" value="LOCAL" />
       <updated>1668860348992</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Delete forense_am_test.py">
+      <created>1668860456146</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1668860456146</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Added comment to our custom function in lmutils for RMSE">
+      <created>1668860591295</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1668860591295</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -357,7 +372,10 @@
     <MESSAGE value="Compute RMSE and percentiles." />
     <MESSAGE value="fix: images correctly cropped." />
     <MESSAGE value="change the test dataset removing one incorrect image" />
-    <option name="LAST_COMMIT_MESSAGE" value="change the test dataset removing one incorrect image" />
+    <MESSAGE value="Delete forense_am_test.py" />
+    <MESSAGE value="Added comment to our custom function in lmutils for RMSE" />
+    <MESSAGE value="feat: added new functionality to gen comparation images" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: added new functionality to gen comparation images" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -385,7 +403,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/3FabRec$forense_am.coverage" NAME="forense_am Coverage Results" MODIFIED="1667503783222" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
     <SUITE FILE_PATH="coverage/3FabRec$forense_am_test.coverage" NAME="forense_am_test Coverage Results" MODIFIED="1665331643241" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/datasets" />
-    <SUITE FILE_PATH="coverage/3FabRec$eval_landmarks.coverage" NAME="eval_landmarks Coverage Results" MODIFIED="1668259442315" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1668254495056" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/3FabRec$eval_landmarks.coverage" NAME="eval_landmarks Coverage Results" MODIFIED="1668862157540" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/3FabRec$3FabRec.coverage" NAME="3FabRec Coverage Results" MODIFIED="1668862313945" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
